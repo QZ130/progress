@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="progress">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>目标计划 · 可交互原型</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #EEEEEE;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+    display: flex; justify-content: center; padding: 20px 8px 40px;
+  }
+  .page-note { position: fixed; top: 10px; left: 12px; font-size: 12px; color: #888; z-index: 5; }
+  .phone {
+    width: 100%; max-width: 400px; background: #fff;
+    border: 2px solid #111; border-radius: 30px;
+    height: 800px; display: flex; flex-direction: column;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.18); overflow: hidden;
+  }
+  .screen { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 18px 12px; border-bottom: 2px solid #000; background: #fff;
+  }
+  .nav-title { font-size: 17px; font-weight: 700; color: #000; }
+  .nav-btn { font-size: 14px; color: #333; cursor: pointer; background: none; border: none; padding: 4px 0; }
+  .nav-btn.primary { font-weight: 700; color: #000; }
+  .nav-btn:disabled { color: #bbb; }
+  .content { flex: 1; overflow-y: auto; padding: 16px 18px 90px; }
+  .sub { font-size: 12px; color: #666; margin-bottom: 12px; }
+  .card {
+    border: 1px solid #000; border-radius: 8px; padding: 12px;
+    margin-bottom: 10px; cursor: pointer; background: #fff;
+    transition: background 0.12s;
+  }
+  .card:active { background: #F3F3F3; }
+  .card-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .card-name { font-size: 14px; font-weight: 700; color: #000; }
+  .card-pct { font-size: 14px; font-weight: 700; color: #000; }
+  .card-dates { font-size: 11px; color: #888; margin: 3px 0 8px; }
+  .bar { height: 6px; background: #E5E5E5; border-radius: 3px; overflow: hidden; margin-bottom: 7px; }
+  .bar-fill { height: 100%; background: #000; border-radius: 3px; }
+  .card-detail { font-size: 12px; color: #333; }
+  .btn-dashed {
+    border: 1px dashed #999; border-radius: 8px; padding: 12px;
+    text-align: center; font-size: 14px; color: #333; cursor: pointer; background: #fff;
+  }
+  .btn-dashed:active { background: #F3F3F3; }
+  .link-row { text-align: center; padding: 14px 0 0; font-size: 13px; color: #666; cursor: pointer; }
+  .btn-primary {
+    background: #000; color: #fff; border: none; border-radius: 8px;
+    padding: 13px; text-align: center; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%;
+  }
+  .btn-primary:active { background: #333; }
+  .btn-outline {
+    background: #fff; color: #000; border: 1px solid #000; border-radius: 8px;
+    padding: 13px; text-align: center; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%;
+  }
+  .btn-outline:active { background: #F3F3F3; }
+  .btn-danger {
+    background: #fff; color: #000; border: 1px solid #000; border-radius: 8px;
+    padding: 10px; text-align: center; font-size: 13px; cursor: pointer; width: 100%;
+  }
+  .btn-danger:active { background: #F3F3F3; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: #333; margin-bottom: 5px; }
+  .input {
+    width: 100%; border: 1px solid #000; border-radius: 6px; padding: 10px;
+    font-size: 14px; color: #000; background: #fff; font-family: inherit;
+  }
+  .input::placeholder { color: #bbb; }
+  .input:focus { outline: none; border-width: 2px; }
+  .err { color: #000; font-size: 11px; margin-top: 4px; }
+  .tabbar {
+    display: flex; border-top: 1px solid #000; background: #fff;
+    flex-shrink: 0;
+  }
+  .tab {
+    flex: 1; text-align: center; padding: 13px 2px 15px; font-size: 14px; font-weight: 700;
+    color: #999; cursor: pointer; background: #fff; border: none;
+  }
+  .tab.active { color: #000; font-weight: 700; }
+  .sel-circle { width: 22px; height: 22px; border: 2px solid #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #fff; }
+  .sel-circle.on { background: #000; }
+  .sel-circle.on::after { content: ''; width: 8px; height: 8px; background: #fff; border-radius: 50%; }
+  .card.selected { background: #F3F3F3; }
+  .selbar { display: flex; align-items: center; gap: 8px; border-top: 2px solid #000; background: #fff; padding: 10px 14px; flex-shrink: 0; }
+  .selbar .count { flex: 1; font-size: 13px; color: #333; text-align: center; }
+  .selbar button { flex: 1; }
+  .big-bar { height: 12px; background: #E5E5E5; border-radius: 6px; overflow: hidden; margin: 8px 0 6px; }
+  .kv { font-size: 13px; color: #333; margin-bottom: 6px; }
+  .kv b { font-size: 18px; color: #000; }
+  .rec-row {
+    display: flex; justify-content: space-between; padding: 9px 0;
+    border-bottom: 1px solid #E5E5E5; font-size: 13px; color: #333;
+  }
+  .rec-note { color: #999; }
+  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+  .tag.done { background: #000; color: #fff; }
+  .tag.expired { border: 1px solid #000; color: #000; }
+  .empty { text-align: center; color: #999; font-size: 13px; padding: 40px 0; }
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center; z-index: 20; padding: 20px;
+  }
+  .modal-box {
+    background: #fff; border: 2px solid #000; border-radius: 12px;
+    width: 100%; max-width: 340px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
+  .modal-title { font-size: 15px; font-weight: 700; color: #000; margin-bottom: 12px; text-align: center; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 14px; }
+  .modal-actions button { flex: 1; }
+  .tabpage { flex: 1; display: flex; align-items: center; justify-content: center; color: #999; font-size: 14px; flex-direction: column; }
+  .tabpage .big { font-size: 40px; margin-bottom: 10px; }
+
+  /* ===== 客户管理 ===== */
+  .searchbar { display: flex; align-items: center; border: 1px solid #000; border-radius: 8px; padding: 9px 12px; margin-bottom: 10px; background: #fff; }
+  .searchbar input { flex: 1; border: none; outline: none; font-size: 13px; font-family: inherit; background: transparent; color: #000; }
+  .searchbar input::placeholder { color: #bbb; }
+  .toolbar { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tool-btn { flex: 1; border: 1px solid #000; border-radius: 6px; background: #fff; color: #000; font-size: 12px; font-weight: 600; padding: 8px 0; cursor: pointer; }
+  .tool-btn:active { background: #F3F3F3; }
+  .tool-btn.on { background: #000; color: #fff; }
+  .group-label { font-size: 12px; font-weight: 700; color: #333; margin: 14px 0 8px; padding-left: 2px; }
+  .cust-row { border: 1px solid #000; border-radius: 8px; padding: 11px 12px; margin-bottom: 8px; background: #fff; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+  .cust-row:active { background: #F3F3F3; }
+  .cust-main { flex: 1; min-width: 0; }
+  .cust-name { font-size: 14px; font-weight: 700; color: #000; }
+  .cust-title { font-size: 11px; color: #888; font-weight: 400; margin-left: 6px; }
+  .cust-unit { font-size: 11px; color: #666; margin-top: 2px; }
+  .cust-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+  .tagchip { font-size: 10px; border: 1px solid #000; border-radius: 10px; padding: 1px 8px; color: #000; background: #fff; }
+  .tagchip.solid { background: #000; color: #fff; }
+  .plus-btn { width: 34px; height: 34px; border: 2px solid #000; border-radius: 50%; background: #fff; color: #000; font-size: 18px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .plus-btn:active { background: #000; color: #fff; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 3px; font-size: 10px; color: #888; text-align: center; }
+  .cal-day { border: 1px solid #E5E5E5; border-radius: 6px; min-height: 44px; padding: 3px; font-size: 10px; color: #333; cursor: pointer; background: #fff; position: relative; text-align: center; }
+  .cal-day.other { color: #ccc; background: #FAFAFA; }
+  .cal-day.holiday { background: #F3F3F3; }
+  .cal-day.selected { background: #000; color: #fff; }
+  .cal-day .d { font-weight: 700; }
+  .cal-day .holi { font-size: 7px; color: #000; font-weight: 600; }
+  .slot-tag { display: inline-block; font-size: 8px; border-radius: 3px; padding: 0 3px; margin-top: 1px; font-weight: 700; }
+  .slot-am { background: #000; color: #fff; }
+  .slot-pm { border: 1px solid #000; color: #000; }
+  .slot-night { background: #555; color: #fff; }
+  .note-item { border-bottom: 1px solid #E5E5E5; padding: 9px 0; font-size: 12px; color: #333; }
+  .note-item img { max-width: 100%; max-height: 140px; border: 1px solid #E5E5E5; border-radius: 6px; margin-top: 6px; display: block; }
+  .note-date { font-size: 10px; color: #999; margin-bottom: 2px; }
+  .filter-panel { border: 1px solid #000; border-radius: 8px; padding: 12px; margin-bottom: 12px; background: #fff; }
+  .filter-title { font-size: 12px; font-weight: 700; color: #000; margin-bottom: 8px; }
+  .filter-group { margin-bottom: 10px; }
+  .filter-group .label { font-size: 11px; color: #666; margin-bottom: 5px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 11px; border: 1px solid #000; border-radius: 14px; padding: 4px 10px; color: #000; background: #fff; cursor: pointer; }
+  .chip.on { background: #000; color: #fff; }
+  .visit-group-date { font-size: 12px; font-weight: 700; color: #000; margin: 12px 0 6px; }
+  .visit-item { display: flex; align-items: center; gap: 10px; border: 1px solid #000; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; background: #fff; }
+  .slot-badge { font-size: 10px; font-weight: 700; border: 1px solid #000; border-radius: 4px; padding: 1px 6px; }
+  .img-thumb { width: 46px; height: 46px; border: 1px solid #E5E5E5; border-radius: 6px; object-fit: cover; }
+
+  .coord-tip { font-size: 11px; color: #888; margin-top: 6px; }
+  /* ===== 日历版块 / 拜访完成 / 标签排序 ===== */
+  .cal-strip { flex: 1; display: flex; gap: 4px; overflow-x: auto; }
+  .cal-cell { flex: 1; min-width: 34px; border: 1px solid #E5E5E5; border-radius: 8px; padding: 6px 2px; text-align: center; cursor: pointer; background: #fff; }
+  .cal-cell.today { border-color: #000; border-width: 2px; }
+  .cal-cell.sel { background: #000; color: #fff; }
+  .cal-cell .cc-week { font-size: 10px; color: #888; }
+  .cal-cell .cc-day { font-size: 14px; font-weight: 700; }
+  .cal-cell.sel .cc-week { color: #ccc; }
+  .cal-cell .cc-holi { font-size: 7px; color: #000; }
+  .cal-cell .cc-dot { font-size: 7px; color: #000; }
+  .visit-item.done { opacity: 0.45; }
+  .done-check { width: 22px; height: 22px; border: 1px solid #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; flex-shrink: 0; }
+  .done-check.on { background: #000; color: #fff; }
+  .tag-row { cursor: grab; touch-action: none; }
+  .tag-row.dragging { background: #F3F3F3; opacity: 0.6; cursor: grabbing; }
+
+</head>
+  /* ===== PWA 全屏适配 ===== */
+  body.standalone { background: #fff; padding: 0; }
+  body.standalone .page-note { display: none; }
+  body.standalone .phone { width: 100vw; height: 100dvh; max-width: none; border: none; border-radius: 0; min-height: 0; box-shadow: none; }
+  body.standalone .phone { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+</style>
+<body>
+<div class="page-note">目标计划 · 可交互原型（黑白极简）</div>
+<div class="phone" id="phone"></div>
+
+<script>
+(function () {
+  var STORE_KEY = 'goalplan_demo_v1';
+  var today = new Date();
+  function dstr(offset) {
+    var d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + (offset || 0));
+    function p(n) { return (n < 10 ? '0' : '') + n; }
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+  function fmtDate(s) { return s.slice(5).replace('-', '/'); }
+
+  var seed = {
+    goals: [
+      { id: 1, name: '8月销售目标', start: '2026-08-01', end: '2026-08-31', unit: '万元', target: 10, archived: false,
+        records: [ { date: '2026-08-01', value: 2.7, note: '' }, { date: '2026-08-03', value: 1.5, note: '签了大单' }, { date: '2026-08-05', value: 2.0, note: '' } ] },
+      { id: 2, name: 'Q3季度目标', start: '2026-07-01', end: '2026-09-30', unit: '万元', target: 30, archived: false,
+        records: [ { date: '2026-07-05', value: 3.0, note: '' }, { date: '2026-07-20', value: 2.0, note: '新客户' }, { date: '2026-08-02', value: 1.2, note: '' } ] },
+      { id: 3, name: '7月销售目标', start: '2026-07-01', end: '2026-07-31', unit: '万元', target: 10, archived: true, done: true,
+        records: [ { date: '2026-07-02', value: 3.0, note: '' }, { date: '2026-07-15', value: 5.0, note: '大客户签约' }, { date: '2026-07-28', value: 4.0, note: '' } ] },
+      { id: 4, name: '6月客户拜访', start: '2026-06-01', end: '2026-06-30', unit: '次', target: 20, archived: true, done: false,
+        records: [ { date: '2026-06-05', value: 2, note: '' }, { date: '2026-06-18', value: 3, note: '' } ] }
+    ],
+    tab: 'goals',
+    screen: 'list',
+    selectMode: false,
+    selected: {},
+    goalId: null,
+    editId: null,
+    customers: [
+      { id: 1, name: '王建国', title: '主任医师', phone: '138****0001', city: '上海市', district: '浦东新区', unit: '仁济医院', address: '浦东新区浦建路160号', tags: [2,5],
+        schedule: { mode: 'weekly', week: { mon: ['am'], tue: ['am','pm'], wed: [], thu: ['am'], fri: [], sat: [], sun: [] } },
+        notes: [ { id: 1, text: '偏好周二上午拜访，前台需预约', image: null, date: '2026-08-05' } ] },
+      { id: 2, name: '李敏', title: '主治医师', phone: '139****0002', city: '上海市', district: '徐汇区', unit: '中山医院', address: '徐汇区枫林路180号', tags: [4],
+        schedule: { mode: 'weekly', week: { mon: ['pm'], tue: [], wed: ['pm'], thu: [], fri: [], sat: [], sun: [] } }, notes: [] },
+      { id: 3, name: '陈志强', title: '副主任医师', phone: '137****0003', city: '北京市', district: '海淀区', unit: '北大人民医院', address: '海淀区西直门南大街11号', tags: [1,5],
+        schedule: { mode: 'weekly', week: { mon: [], tue: [], wed: [], thu: [], fri: ['am'], sat: [], sun: [] } }, notes: [ { id: 2, text: '对新产品感兴趣，下次带资料', image: null, date: '2026-08-03' } ] },
+      { id: 4, name: '赵丽华', title: '主任医师', phone: '136****0004', city: '杭州市', district: '西湖区', unit: '浙大一院', address: '西湖区庆春路79号', tags: [3,6],
+        schedule: { mode: 'weekly', week: { mon: ['am','night'], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] } }, notes: [] }
+    ],
+    tags: [
+      { id: 1, name: '未拜访' },
+      { id: 2, name: '重点客户' },
+      { id: 3, name: '次重点客户' },
+      { id: 4, name: 'A级客户' },
+      { id: 5, name: 'B级客户' },
+      { id: 6, name: 'C级客户' },
+      { id: 7, name: 'D级客户' }
+    ],
+    visits: [
+      { id: 1, customerId: 1, date: '2026-08-12', slots: ['am'], done: false },
+      { id: 2, customerId: 2, date: '2026-08-13', slots: ['pm'], done: false }
+    ],
+    cFilter: { kw: '', city: '', district: '', unit: '', tags: [] },
+    cScreen: 'list',
+    cSelId: null,
+    cEditId: null,
+  };
+  // 中国法定节假日示例（2026年，演示数据）
+  var CN_HOLIDAYS = {
+    '2026-01-01': '元旦',
+    '2026-02-16': '除夕',
+    '2026-02-17': '春节',
+    '2026-02-18': '初二',
+    '2026-04-05': '清明',
+    '2026-05-01': '劳动节',
+    '2026-06-19': '端午',
+    '2026-09-25': '中秋',
+    '2026-10-01': '国庆'
+  };
+
+  var state;
+  try {
+    var saved = localStorage.getItem(STORE_KEY);
+    state = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(seed));
+    // 兼容旧版本数据：补齐客户管理相关字段
+    if (!state.customers) state.customers = JSON.parse(JSON.stringify(seed.customers));
+    if (!state.tags) state.tags = JSON.parse(JSON.stringify(seed.tags));
+    if (!state.visits) state.visits = JSON.parse(JSON.stringify(seed.visits));
+    if (!state.cFilter) state.cFilter = { kw: '', city: '', district: '', unit: '', tags: [] };
+    state.customers.forEach(function (c) {
+      // 旧版日期格式排班 → 每周定期（按星期归类合并）
+      if (c.schedule && !c.schedule.mode) {
+        var wkArr = ['mon','tue','wed','thu','fri','sat','sun'];
+        var w = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
+        Object.keys(c.schedule).forEach(function (ds) {
+          var d = new Date(ds + 'T00:00:00');
+          if (isNaN(d.getTime())) return;
+          var k = wkArr[d.getDay() === 0 ? 6 : d.getDay() - 1];
+          (c.schedule[ds] || []).forEach(function (sl) { if (w[k].indexOf(sl) < 0) w[k].push(sl); });
+        });
+        c.schedule = { mode: 'weekly', week: w };
+      }
+      if (!c.schedule || !c.schedule.mode) c.schedule = { mode: 'weekly', week: { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] } };
+      if (state._formSchedule === undefined) state._formSchedule = null;
+      if (state._schedFrom === undefined) state._schedFrom = null;
+    });
+    if (state.cScreen === undefined) state.cScreen = 'list';
+    if (state.cSelId === undefined) state.cSelId = null;
+    if (state.cEditId === undefined) state.cEditId = null;
+    if (state.batchMode === undefined) state.batchMode = false;
+    if (state.cSelected === undefined) state.cSelected = {};
+    if (state.showFilter === undefined) state.showFilter = false;
+    if (state.visits) state.visits.forEach(function (v) {
+      if (v.slot && !v.slots) v.slots = [v.slot];
+      if (!v.slots) v.slots = [];
+      if (v.done === undefined) v.done = false;
+    });
+    if (state.calDays === undefined) state.calDays = 7;
+    if (state.calCenter === undefined) state.calCenter = dstr(0);
+    if (state.calSelected === undefined) state.calSelected = dstr(0);
+    if (state.calMonthOpen === undefined) state.calMonthOpen = false;
+    if (state.calViewYear === undefined) state.calViewYear = Number(dstr(0).slice(0, 4));
+    if (state.calViewMonth === undefined) state.calViewMonth = Number(dstr(0).slice(5, 7)) - 1;
+  } catch (e) { state = JSON.parse(JSON.stringify(seed)); }
+
+  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {} }
+
+  function sumRecords(g) { return g.records.reduce(function (s, r) { return s + r.value; }, 0); }
+  function pct(g) {
+    var s = sumRecords(g); var p = g.target > 0 ? s / g.target : 0;
+    return Math.min(100, Math.round(p * 100));
+  }
+  function daysLeft(g) {
+    var end = new Date(g.end + 'T23:59:59'); var t = new Date(); t.setHours(0,0,0,0);
+    return Math.max(0, Math.round((end - t) / 86400000));
+  }
+  function autoArchive() {
+    state.goals.forEach(function (g) {
+      if (g.archived) return;
+      var t = new Date(); t.setHours(0,0,0,0);
+      var end = new Date(g.end + 'T23:59:59');
+      var done = g.target > 0 && sumRecords(g) >= g.target - 1e-9;
+      if (done || end < t) { g.archived = true; g.done = done; }
+    });
+    save();
+  }
+  function activeGoals() { return state.goals.filter(function (g) { return !g.archived; }); }
+  function archivedGoals() { return state.goals.filter(function (g) { return g.archived; }); }
+  function findGoal(id) { return state.goals.find(function (g) { return String(g.id) === String(id); }); }
+
+  var phone = document.getElementById('phone');
+
+  function nav(title, left, right) {
+    return '<div class="nav">' +
+      '<div class="nav-btn">' + (left || '') + '</div>' +
+      '<div class="nav-title">' + title + '</div>' +
+      '<div class="nav-btn ' + (right && right.indexOf('primary') >= 0 ? 'primary' : '') + '">' + (right || '') + '</div>' +
+    '</div>';
+  }
+
+  function goalCard(g) {
+    var selected = state.selected[String(g.id)];
+    if (state.selectMode) {
+      return '<div class="card' + (selected ? ' selected' : '') + '" data-id="' + g.id + '" onclick="APP.toggleSelect(this.dataset.id)">' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<div class="sel-circle' + (selected ? ' on' : '') + '"></div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div class="card-head"><span class="card-name">' + g.name + '</span><span class="card-pct">' + pct(g) + '%</span></div>' +
+            '<div class="card-dates">' + fmtDate(g.start) + ' ~ ' + fmtDate(g.end) + '</div>' +
+            '<div class="bar"><div class="bar-fill" style="width:' + pct(g) + '%"></div></div>' +
+            '<div class="card-detail">已完成 <b>' + sumRecords(g).toFixed(1) + '</b> ' + g.unit + ' · 差 ' + Math.max(0, g.target - sumRecords(g)).toFixed(1) + ' ' + g.unit + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }
+    return '<div class="card" data-id="' + g.id + '" onclick="APP.openGoal(this.dataset.id)">' +
+      '<div class="card-head"><span class="card-name">' + g.name + '</span><span class="card-pct">' + pct(g) + '%</span></div>' +
+      '<div class="card-dates">' + fmtDate(g.start) + ' ~ ' + fmtDate(g.end) + '</div>' +
+      '<div class="bar"><div class="bar-fill" style="width:' + pct(g) + '%"></div></div>' +
+      '<div class="card-detail">已完成 <b>' + sumRecords(g).toFixed(1) + '</b> ' + g.unit + ' · 差 ' + Math.max(0, g.target - sumRecords(g)).toFixed(1) + ' ' + g.unit + '</div>' +
+    '</div>';
+  }
+
+  function archiveCard(g) {
+    var tag = g.done ? '<span class="tag done">已完成</span>' : '<span class="tag expired">已过期</span>';
+    var selected = state.selected[String(g.id)];
+    if (state.selectMode) {
+      return '<div class="card' + (selected ? ' selected' : '') + '" data-id="' + g.id + '" onclick="APP.toggleSelect(this.dataset.id)">' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<div class="sel-circle' + (selected ? ' on' : '') + '"></div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div class="card-head"><span class="card-name">' + g.name + '</span>' + tag + '</div>' +
+            '<div class="card-dates">' + fmtDate(g.start) + ' ~ ' + fmtDate(g.end) + '</div>' +
+            '<div class="bar"><div class="bar-fill" style="width:' + pct(g) + '%"></div></div>' +
+            '<div class="card-detail">完成 ' + pct(g) + '% · ' + sumRecords(g).toFixed(1) + ' / ' + g.target + ' ' + g.unit + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }
+    return '<div class="card" data-id="' + g.id + '" onclick="APP.openGoal(this.dataset.id)">' +
+      '<div class="card-head"><span class="card-name">' + g.name + '</span>' + tag + '</div>' +
+      '<div class="card-dates">' + fmtDate(g.start) + ' ~ ' + fmtDate(g.end) + '</div>' +
+      '<div class="bar"><div class="bar-fill" style="width:' + pct(g) + '%"></div></div>' +
+      '<div class="card-detail">完成 ' + pct(g) + '% · ' + sumRecords(g).toFixed(1) + ' / ' + g.target + ' ' + g.unit + '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:10px;" onclick="event.stopPropagation()">' +
+        '<button class="btn-outline" style="padding:8px;font-size:13px;" data-id="' + g.id + '" onclick="APP.restoreGoal(this.dataset.id)">恢复</button>' +
+        '<button class="btn-danger" style="padding:8px;font-size:13px;" data-id="' + g.id + '" onclick="APP.confirmDelete(this.dataset.id)">删除</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function tabbar() {
+    var tabs = [
+      { key: 'calendar', ic: '📅', label: '日历' },
+      { key: 'goals', ic: '🎯', label: '目标计划' },
+      { key: 'customers', ic: '👥', label: '客户管理' },
+      { key: 'visits', ic: '📝', label: '拜访计划' },
+      { key: 'settings', ic: '⚙️', label: '设置' }
+    ];
+    var h = '<div class="tabbar">';
+    tabs.forEach(function (t) {
+      h += '<div class="tab' + (state.tab === t.key ? ' active' : '') + '" data-key="' + t.key + '" onclick="APP.switchTab(this.dataset.key)">' +
+        t.label + '</div>';
+    });
+    return h + '</div>';
+  }
+
+  function screenList() {
+    var goals = activeGoals();
+    var ym = today.getFullYear() + '年' + (today.getMonth() + 1) + '月';
+    var selCount = Object.keys(state.selected).length;
+    var h = nav('目标计划', '', state.selectMode
+      ? '<span class="primary" onclick="APP.finishSelect()">完成</span>'
+      : '<span onclick="APP.enterSelect()">选择</span>');
+    h += '<div class="content">';
+    h += '<div class="sub">' + ym + ' · 共 ' + goals.length + ' 个目标' + (state.selectMode ? ' · 已选 ' + selCount + ' 个' : '') + '</div>';
+    if (goals.length === 0) h += '<div class="empty">本月暂无进行中的目标</div>';
+    goals.forEach(function (g) { h += goalCard(g); });
+    if (!state.selectMode) {
+      h += '<div class="btn-dashed" onclick="APP.newGoal()">＋ 添加计划</div>';
+      h += '<div class="link-row" onclick="APP.openArchive()">📁 已归档目标（' + archivedGoals().length + '）</div>';
+    }
+    h += '</div>';
+    if (state.selectMode) {
+      var allSelected = goals.length > 0 && goals.every(function (g) { return state.selected[String(g.id)]; });
+      h += '<div class="selbar">' +
+        '<button class="btn-outline" style="padding:8px;font-size:13px;" onclick="APP.batchArchive()">归档</button>' +
+        '<button class="btn-outline" style="padding:8px;font-size:13px;" onclick="APP.selectAll()">' + (allSelected ? '取消全选' : '全选') + '</button>' +
+        '<button class="btn-danger" style="padding:8px;font-size:13px;" onclick="APP.batchDelete()">删除</button>' +
+      '</div>';
+    } else {
+      h += tabbar();
+    }
+    return h;
+  }
+
+  function screenArchive() {
+    var list = archivedGoals();
+    var h = nav('已归档',
+      '<span onclick="APP.back()">‹ 返回</span>',
+      state.selectMode
+        ? '<span class="primary" onclick="APP.finishSelect()">完成</span>'
+        : '<span onclick="APP.enterSelect()">选择</span>');
+    h += '<div class="content">';
+    if (list.length === 0) h += '<div class="empty">暂无已归档目标</div>';
+    list.forEach(function (g) { h += archiveCard(g); });
+    h += '</div>';
+    if (state.selectMode) {
+      var allSelected = list.length > 0 && list.every(function (g) { return state.selected[String(g.id)]; });
+      h += '<div class="selbar">' +
+        '<button class="btn-outline" style="padding:8px;font-size:13px;" onclick="APP.batchRestore()">恢复</button>' +
+        '<button class="btn-outline" style="padding:8px;font-size:13px;" onclick="APP.selectAll()">' + (allSelected ? '取消全选' : '全选') + '</button>' +
+        '<button class="btn-danger" style="padding:8px;font-size:13px;" onclick="APP.batchDelete()">删除</button>' +
+      '</div>';
+    } else {
+      h += tabbar();
+    }
+    return h;
+  }
+
+  function screenForm() {
+    var editing = state.editId ? findGoal(state.editId) : null;
+    var f = editing ? { name: editing.name, start: editing.start, end: editing.end, unit: editing.unit, target: editing.target }
+                    : { name: '', start: dstr(1), end: dstr(30), unit: '', target: '' };
+    var h = nav(editing ? '编辑目标' : '新建目标',
+      '<span onclick="APP.back()">取消</span>',
+      '<span class="primary" onclick="APP.saveForm()">保存</span>');
+    h += '<div class="content">' +
+      '<div class="field"><label>目标名称</label><input class="input" id="f-name" value="' + f.name + '" placeholder="如：8月销售目标"></div>' +
+      '<div class="field"><label>开始日期</label><input class="input" id="f-start" type="date" value="' + f.start + '"></div>' +
+      '<div class="field"><label>结束日期</label><input class="input" id="f-end" type="date" value="' + f.end + '"></div>' +
+      '<div class="field"><label>单位</label><input class="input" id="f-unit" value="' + f.unit + '" placeholder="如：万元 / 次 / 公里"></div>' +
+      '<div class="field"><label>目标数值</label><input class="input" id="f-target" type="number" step="any" value="' + f.target + '" placeholder="如：100"></div>' +
+      '<div class="err" id="f-err"></div>' +
+      '<button class="btn-primary" onclick="APP.saveForm()">保存</button>' +
+      (editing ? '<div style="margin-top:12px;"><button class="btn-danger" data-id="' + editing.id + '" onclick="APP.confirmDelete(this.dataset.id)">删除目标</button></div>' : '') +
+    '</div>';
+    return h;
+  }
+
+  function screenDetail() {
+    var g = findGoal(state.goalId);
+    if (!g) return screenList();
+    var s = sumRecords(g), p = pct(g), dl = daysLeft(g);
+    var h = nav('目标详情',
+      '<span onclick="APP.back()">‹ 返回</span>',
+      '<span class="primary" data-id="' + g.id + '" onclick="APP.editGoal(this.dataset.id)">编辑</span>');
+    h += '<div class="content">';
+    h += '<div class="card-name" style="font-size:17px;">' + g.name + '</div>';
+    h += '<div class="card-dates" style="margin:4px 0 14px;">' + g.start + ' ~ ' + g.end + ' · 还剩 ' + dl + ' 天</div>';
+    h += '<div class="kv">已完成 <b>' + s.toFixed(1) + '</b> / ' + g.target + ' ' + g.unit + '</div>';
+    h += '<div class="big-bar"><div class="bar-fill" style="width:' + p + '%"></div></div>';
+    h += '<div class="sub" style="margin-bottom:14px;">进度 ' + p + '% · ' + (g.archived ? (g.done ? '已完成' : '已过期') : '还差 ' + Math.max(0, g.target - s).toFixed(1) + ' ' + g.unit) + '</div>';
+    if (!g.archived) {
+      h += '<button class="btn-primary" data-id="' + g.id + '" onclick="APP.openRecord(this.dataset.id)">＋ 录入数据</button>';
+    } else {
+      h += '<button class="btn-outline" data-id="' + g.id + '" onclick="APP.restoreGoal(this.dataset.id)">恢复到进行中</button>';
+    }
+    h += '<div style="font-size:13px;font-weight:700;color:#333;margin:18px 0 4px;">录入记录</div>';
+    if (g.records.length === 0) h += '<div class="empty" style="padding:20px 0;">还没有录入记录</div>';
+    g.records.slice().sort(function (a, b) { return b.date < a.date ? -1 : 1; }).forEach(function (r) {
+      h += '<div class="rec-row"><span>' + r.date + ' · +' + r.value + ' ' + g.unit + '</span><span class="rec-note">' + (r.note || '') + '</span></div>';
+    });
+    h += '</div>' + tabbar();
+    return h;
+  }
+
+  // ========== 客户管理：辅助函数 ==========
+  function findCustomer(id) { return state.customers.find(function (c) { return String(c.id) === String(id); }); }
+  function findTag(id) { return state.tags.find(function (t) { return String(t.id) === String(id); }); }
+  function slotName(s) { return s === 'am' ? '上午' : s === 'pm' ? '下午' : '晚上'; }
+  function slotShort(s) { return s === 'am' ? 'AM' : s === 'pm' ? 'PM' : 'NIGHT'; }
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function dateStr(y, m, d) { return y + '-' + pad2(m + 1) + '-' + pad2(d); }
+  function monthLabel(y, m) { return y + '年' + (m + 1) + '月'; }
+  function holidayOf(ds) { return CN_HOLIDAYS[ds] || ''; }
+  function unique(arr) { return arr.filter(function (v, i) { return arr.indexOf(v) === i; }); }
+  function custTagHtml(c) {
+    return c.tags.map(function (tid) { var t = findTag(tid); return t ? '<span class="tagchip">' + t.name + '</span>' : ''; }).join('');
+  }
+  var SURNAME_PINYIN = {
+    '王':'wang','魏':'wei','吴':'wu','李':'li','张':'zhang','刘':'liu','陈':'chen','杨':'yang','黄':'huang',
+    '赵':'zhao','周':'zhou','徐':'xu','孙':'sun','马':'ma','朱':'zhu','胡':'hu','郭':'guo','何':'he','高':'gao',
+    '林':'lin','罗':'luo','郑':'zheng','梁':'liang','谢':'xie','宋':'song','唐':'tang','许':'xu','韩':'han','冯':'feng',
+    '邓':'deng','曹':'cao','彭':'peng','曾':'zeng','肖':'xiao','田':'tian','董':'dong','袁':'yuan','潘':'pan','于':'yu',
+    '蒋':'jiang','蔡':'cai','余':'yu','杜':'du','叶':'ye','程':'cheng','苏':'su','吕':'lv','丁':'ding','任':'ren',
+    '沈':'shen','姚':'yao','卢':'lu','姜':'jiang','崔':'cui','钟':'zhong','谭':'tan','陆':'lu','汪':'wang','范':'fan',
+    '金':'jin','石':'shi','廖':'liao','贾':'jia','夏':'xia','韦':'wei','付':'fu','方':'fang','白':'bai','邹':'zou',
+    '孟':'meng','熊':'xiong','秦':'qin','邱':'qiu','江':'jiang','尹':'yin','薛':'xue','闫':'yan','段':'duan','雷':'lei',
+    '侯':'hou','龙':'long','史':'shi','陶':'tao','黎':'li','贺':'he','顾':'gu','毛':'mao','郝':'hao','龚':'gong',
+    '邵':'shao','万':'wan','钱':'qian','严':'yan','覃':'qin','武':'wu','戴':'dai','莫':'mo','孔':'kong','向':'xiang',
+    '汤':'tang','章':'zhang','庞':'pang','蓝':'lan','路':'lu','祝':'zhu','康':'kang','倪':'ni','洪':'hong',
+    // 常用名字用字
+    '建':'jian','国':'guo','敏':'min','志':'zhi','强':'qiang','丽':'li','华':'hua','伟':'wei','芳':'fang','娜':'na',
+    '秀':'xiu','娟':'juan','英':'ying','慧':'hui','巧':'qiao','美':'mei','静':'jing','淑':'shu','惠':'hui','珠':'zhu',
+    '翠':'cui','雅':'ya','芝':'zhi','玉':'yu','萍':'ping','红':'hong','娥':'e','玲':'ling','芬':'fen','竹':'zhu',
+    '燕':'yan','彩':'cai','春':'chun','菊':'ju','兰':'lan','凤':'feng','洁':'jie','梅':'mei','琳':'lin','素':'su',
+    '云':'yun','莲':'lian','真':'zhen','环':'huan','雪':'xue','荣':'rong','爱':'ai','妹':'mei','霞':'xia','香':'xiang',
+    '月':'yue','莺':'ying','媛':'yuan','艳':'yan','瑞':'rui','凡':'fan','嘉':'jia','琼':'qiong','勤':'qin','珍':'zhen',
+    '晓':'xiao','亮':'liang','明':'ming','军':'jun','磊':'lei','民':'min','友':'you','朋':'peng','永':'yong','彬':'bin',
+    '成':'cheng','刚':'gang','平':'ping','辉':'hui','超':'chao','文':'wen','俊':'jun','峰':'feng','波':'bo','涛':'tao',
+    '杰':'jie','海':'hai','山':'shan','川':'chuan','东':'dong','兵':'bing','阳':'yang','光':'guang','天':'tian','宇':'yu',
+    '浩':'hao','然':'ran','博':'bo','睿':'rui','泽':'ze','涵':'han','鑫':'xin','航':'hang','子':'zi','轩':'xuan',
+    '皓':'hao','思':'si','源':'yuan','凯':'kai','鹏':'peng','飞':'fei','启':'qi','晨':'chen','曦':'xi','欣':'xin',
+    '怡':'yi','诺':'nuo','言':'yan','琪':'qi','悦':'yue','婷':'ting','妍':'yan','珊':'shan','玥':'yue','桐':'tong',
+    '萱':'xuan','瑶':'yao','蔓':'man','菲':'fei','蓉':'rong','薇':'wei','蕾':'lei','蕊':'rui','莹':'ying','丹':'dan',
+    '莉':'li','莎':'sha','梦':'meng','蝶':'die','花':'hua','曼':'man','婧':'jing','佳':'jia','乐':'le','心':'xin',
+    '希':'xi','瑾':'jin','瑜':'yu','琛':'chen','铭':'ming','宸':'chen','恺':'kai','翊':'yi','辰':'chen','昇':'sheng',
+    '朗':'lang','恒':'heng','毅':'yi','谦':'qian','越':'yue','腾':'teng','茂':'mao','盛':'sheng','远':'yuan','达':'da',
+    '智':'zhi','勇':'yong','诚':'cheng','信':'xin','义':'yi','礼':'li','和':'he','安':'an','宁':'ning','冬':'dong',
+    '秋':'qiu','松':'song','柏':'bai','冰':'bing','霜':'shuang','露':'lu','虹':'hong','星':'xing','日':'ri','时':'shi'
+  };
+  function pinyinMatch(c, k) {
+    var chars = c.name.split('');
+    var full = '', initials = '';
+    chars.forEach(function (ch) {
+      var p = SURNAME_PINYIN[ch] || '';
+      if (p) { full += p; initials += p.charAt(0); }
+    });
+    if (full && full.indexOf(k) === 0) return true;
+    if (initials && initials.indexOf(k) === 0) return true;
+    var firstPy = SURNAME_PINYIN[c.name.charAt(0)] || '';
+    if (firstPy && (firstPy.charAt(0) === k || firstPy.indexOf(k) === 0)) return true;
+    return false;
+  }
+  function filteredCustomers() {
+    var f = state.cFilter;
+    return state.customers.filter(function (c) {
+      if (f.kw) {
+        var k = f.kw.toLowerCase();
+        var hay = (c.name + ' ' + c.title + ' ' + c.unit + ' ' + c.address + ' ' + c.city + ' ' + c.district).toLowerCase();
+        var matched = hay.indexOf(k) >= 0;
+        if (!matched && /^[a-z]+$/.test(k)) matched = pinyinMatch(c, k);
+        if (!matched) return false;
+      }
+      if (f.city && c.city !== f.city) return false;
+      if (f.district && c.district !== f.district) return false;
+      if (f.unit && c.unit !== f.unit) return false;
+      if (f.tags.length && !f.tags.some(function (tid) { return c.tags.indexOf(tid) >= 0; })) return false;
+      return true;
+    });
+  }
+  function hasAddrFilter() { return !!(state.cFilter.city || state.cFilter.district || state.cFilter.unit); }
+
+  // ========== 客户列表 ==========
+  function custMain(c, tagHtml) {
+    return '<div class="cust-name">' + c.name + '<span class="cust-title">' + (c.title || '') + '</span></div>' +
+      '<div class="cust-unit">' + c.unit + ' · ' + c.city + c.district + '</div>' +
+      (tagHtml ? '<div class="cust-tags">' + tagHtml + '</div>' : '');
+  }
+  function customerRow(c) {
+    var tagHtml = custTagHtml(c);
+    if (state.batchMode) {
+      var sel = state.cSelected[String(c.id)];
+      return '<div class="cust-row' + (sel ? ' selected' : '') + '" data-id="' + c.id + '" onclick="APP.toggleCustomerSel(this.dataset.id)">' +
+        '<div class="sel-circle' + (sel ? ' on' : '') + '"></div>' +
+        '<div class="cust-main">' + custMain(c, tagHtml) + '</div>' +
+      '</div>';
+    }
+    return '<div class="cust-row" data-id="' + c.id + '" onclick="APP.openCustomer(this.dataset.id)">' +
+      '<div class="cust-main">' + custMain(c, tagHtml) + '</div>' +
+      '<div class="plus-btn" data-id="' + c.id + '" onclick="event.stopPropagation();APP.addVisit(this.dataset.id)">+</div>' +
+    '</div>';
+  }
+  function filterPanel() {
+    var f = state.cFilter;
+    var cities = unique(state.customers.map(function (c) { return c.city; }));
+    var districtPool = state.customers.filter(function (c) { return !f.city || c.city === f.city; });
+    var districts = unique(districtPool.map(function (c) { return c.district; }));
+    var unitPool = districtPool.filter(function (c) { return !f.district || c.district === f.district; });
+    var units = unique(unitPool.map(function (c) { return c.unit; }));
+    var h = '<div class="filter-panel">';
+    h += '<div class="filter-title">地址筛选（城市 → 地区 → 工作单位）</div>';
+    h += '<div class="filter-group"><div class="label">城市</div><div class="chips">' +
+      cities.map(function (v) { return '<span class="chip' + (f.city === v ? ' on' : '') + '" data-v="' + v + '" onclick="APP.setCity(this.dataset.v)">' + v + '</span>'; }).join('') +
+      '</div></div>';
+    h += '<div class="filter-group"><div class="label">地区</div><div class="chips">' +
+      (districts.length ? districts.map(function (v) { return '<span class="chip' + (f.district === v ? ' on' : '') + '" data-v="' + v + '" onclick="APP.setDistrict(this.dataset.v)">' + v + '</span>'; }).join('') : '<span style="font-size:11px;color:#bbb;">请先选择城市</span>') +
+      '</div></div>';
+    h += '<div class="filter-group"><div class="label">工作单位</div><div class="chips">' +
+      (units.length ? units.map(function (v) { return '<span class="chip' + (f.unit === v ? ' on' : '') + '" data-v="' + v + '" onclick="APP.setUnit(this.dataset.v)">' + v + '</span>'; }).join('') : '<span style="font-size:11px;color:#bbb;">请先选择地区</span>') +
+      '</div></div>';
+    h += '<div class="filter-title">标签筛选</div>';
+    h += '<div class="chips">' +
+      state.tags.map(function (t) {
+        var on = f.tags.indexOf(t.id) >= 0;
+        return '<span class="chip' + (on ? ' on' : '') + '" data-id="' + t.id + '" onclick="APP.toggleTagFilter(this.dataset.id)">' + t.name + '</span>';
+      }).join('') +
+      '</div>';
+    h += '<button class="btn-outline" style="margin-top:12px;padding:8px;font-size:12px;" onclick="APP.clearFilter()">清除筛选</button>';
+    h += '</div>';
+    return h;
+  }
+  function customerListHTML() {
+    var list = filteredCustomers();
+    var groups = {};
+    list.forEach(function (c) { (groups[c.city] = groups[c.city] || []).push(c); });
+    var h = '';
+    if (list.length === 0) h += '<div class="empty">未找到匹配的客户</div>';
+    Object.keys(groups).forEach(function (city) {
+      h += '<div class="group-label">📍 ' + city + '</div>';
+      groups[city].forEach(function (c) { h += customerRow(c); });
+    });
+    return h;
+  }
+  function screenCustomerList() {
+    var h = nav('客户管理', '', '<span class="primary" onclick="APP.newCustomer()">＋</span>');
+    h += '<div class="content">';
+    h += '<div class="searchbar"><input id="c-kw" value="' + state.cFilter.kw + '" placeholder="搜索客户 / 拼音 / 地址" oninput="APP.setKw(this.value)"></div>';
+    h += '<div class="toolbar">' +
+      '<button class="tool-btn' + (hasAddrFilter() ? ' on' : '') + '" onclick="APP.toggleFilterPanel()">地址</button>' +
+      '<button class="tool-btn' + (state.cFilter.tags.length ? ' on' : '') + '" onclick="APP.toggleFilterPanel()">标签</button>' +
+      '<button class="tool-btn" onclick="APP.openTagManager()">标签管理</button>' +
+      '<button class="tool-btn" onclick="APP.enterBatch()">批量</button>' +
+    '</div>';
+    if (state.showFilter) h += filterPanel();
+    if (state.batchMode) {
+      h += '<div style="font-size:12px;color:#000;background:#F3F3F3;border:1px solid #000;border-radius:6px;padding:9px;margin-bottom:10px;">已选 <b>' + Object.keys(state.cSelected).length + '</b> 位客户 · 底部选择要批量修改的内容</div>';
+    }
+    h += '<div id="cust-list">' + customerListHTML() + '</div>';
+    h += '</div>';
+    if (state.batchMode) {
+      h += '<div class="selbar">' +
+        '<button class="btn-outline" style="padding:8px;font-size:12px;" onclick="APP.batchEditAddr()">改地址</button>' +
+        '<button class="btn-outline" style="padding:8px;font-size:12px;" onclick="APP.batchEditSched()">改坐诊</button>' +
+        '<button class="btn-danger" style="padding:8px;font-size:12px;" onclick="APP.finishBatch()">完成</button>' +
+      '</div>';
+    } else {
+      h += tabbar();
+    }
+    return h;
+  }
+
+  // ========== 客户详情 ==========
+  var WEEK_KEYS = ['mon','tue','wed','thu','fri','sat','sun'];
+  var WEEK_NAMES = { mon: '周一', tue: '周二', wed: '周三', thu: '周四', fri: '周五', sat: '周六', sun: '周日' };
+  function emptyWeekly() { var w = {}; WEEK_KEYS.forEach(function (k) { w[k] = []; }); return w; }
+  function emptySchedule() { return { mode: 'weekly', week: emptyWeekly() }; }
+  function scheduleSummaryText(c) {
+    var s = c.schedule || {};
+    if (!s || !s.mode) return '暂未设置工作时间';
+    if (s.mode === 'weekly') {
+      var parts = [];
+      WEEK_KEYS.forEach(function (k) {
+        if (s.week && s.week[k] && s.week[k].length) parts.push(WEEK_NAMES[k] + ' ' + s.week[k].map(slotName).join('、'));
+      });
+      return parts.length ? '每周：' + parts.join('；') : '暂未设置工作时间';
+    }
+    if (s.mode === 'monthly') {
+      if (!s.days || !s.days.length) return '暂未设置工作时间';
+      return '每月 ' + s.days.slice().sort(function (a, b) { return a - b; }).join('、') + ' 号：' + (s.slots || []).map(slotName).join('、');
+    }
+    return '暂未设置工作时间';
+  }
+  function scheduleHasDate(s, ds) {
+    return scheduleSlotsOnDate(s, ds).length > 0;
+  }
+  function scheduleSlotsOnDate(s, ds) {
+    if (!s || !s.mode) return [];
+    if (s.mode === 'weekly') {
+      var d = new Date(ds + 'T00:00:00');
+      if (isNaN(d.getTime())) return [];
+      var k = WEEK_KEYS[d.getDay() === 0 ? 6 : d.getDay() - 1];
+      return (s.week && s.week[k]) || [];
+    }
+    if (s.mode === 'monthly') {
+      var day = Number(ds.slice(8, 10));
+      return (s.days && s.days.indexOf(day) >= 0) ? (s.slots || []) : [];
+    }
+    return [];
+  }
+  function scheduleSummary(c) {
+    return '<div style="font-size:12px;color:#333;padding:4px 0 10px;">' + scheduleSummaryText(c) + '</div>';
+  }
+  function screenCustomerDetail() {
+    var c = findCustomer(state.cSelId);
+    if (!c) return screenCustomerList();
+    var tagHtml = custTagHtml(c);
+    var h = nav('客户详情',
+      '<span onclick="APP.backCustomer()">‹ 返回</span>',
+      '<span class="primary" data-id="' + c.id + '" onclick="APP.editCustomer(this.dataset.id)">编辑</span>');
+    h += '<div class="content">';
+    h += '<div class="card-name" style="font-size:17px;">' + c.name + ' <span style="font-size:12px;color:#888;font-weight:400;">' + (c.title || '') + '</span></div>';
+    h += '<div style="font-size:12px;color:#666;margin:4px 0 12px;">' + c.unit + ' · ' + c.city + c.district + (c.address ? ' · ' + c.address : '') + ' · ' + c.phone + '</div>';
+    if (tagHtml) h += '<div class="cust-tags" style="margin-bottom:12px;">' + tagHtml + '</div>';
+    h += '<div class="filter-title">坐诊 / 上班时间</div>';
+    h += '<button class="btn-outline" style="padding:9px;font-size:13px;margin-bottom:8px;" data-id="' + c.id + '" onclick="APP.openSchedule(this.dataset.id)">编辑坐诊时间</button>';
+    h += scheduleSummary(c);
+    h += '<div class="filter-title" style="margin-top:14px;">备注</div>';
+    h += '<button class="btn-outline" style="padding:9px;font-size:13px;margin-bottom:8px;" data-id="' + c.id + '" onclick="APP.addNote(this.dataset.id)">＋ 添加备注（可插图）</button>';
+    if (c.notes.length === 0) h += '<div class="empty" style="padding:16px 0;">暂无备注</div>';
+    c.notes.slice().reverse().forEach(function (n) {
+      h += '<div class="note-item"><div class="note-date">' + n.date + '</div>' + n.text + (n.image ? '<img src="' + n.image + '">' : '') + '</div>';
+    });
+    h += '<div style="margin-top:14px;"><button class="btn-danger" data-id="' + c.id + '" onclick="APP.confirmDeleteCustomer(this.dataset.id)">删除客户</button></div>';
+    h += '</div>' + tabbar();
+    return h;
+  }
+
+  function tabPlaceholder(key, name) {
+    var h = nav(name, '', '');
+    h += '<div class="content"><div class="tabpage"><div class="big">🚧</div><div>' + name + ' 版块将在后续制作</div></div></div>' + tabbar();
+    return h;
+  }
+
+  // ========== 工作时间：循环模式编辑 ==========
+  function weeklyRow(k) {
+    var slots = (state._formSchedule.week && state._formSchedule.week[k]) || [];
+    return '<div class="rec-row">' +
+      '<span style="font-weight:700;color:#000;width:42px;flex-shrink:0;">' + WEEK_NAMES[k] + '</span>' +
+      '<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">' +
+        '<span class="chip' + (slots.indexOf('am') >= 0 ? ' on' : '') + '" data-k="' + k + '" data-s="am" onclick="APP.schedToggleSlot(this)">上午</span>' +
+        '<span class="chip' + (slots.indexOf('pm') >= 0 ? ' on' : '') + '" data-k="' + k + '" data-s="pm" onclick="APP.schedToggleSlot(this)">下午</span>' +
+        '<span class="chip' + (slots.indexOf('night') >= 0 ? ' on' : '') + '" data-k="' + k + '" data-s="night" onclick="APP.schedToggleSlot(this)">晚上</span>' +
+      '</span></div>';
+  }
+  function monthlySlotChips() {
+    var slots = state._formSchedule.slots || [];
+    return '<div class="chips" style="justify-content:center;">' +
+      '<span class="chip' + (slots.indexOf('am') >= 0 ? ' on' : '') + '" data-s="am" onclick="APP.schedToggleSlots(this)">上午</span>' +
+      '<span class="chip' + (slots.indexOf('pm') >= 0 ? ' on' : '') + '" data-s="pm" onclick="APP.schedToggleSlots(this)">下午</span>' +
+      '<span class="chip' + (slots.indexOf('night') >= 0 ? ' on' : '') + '" data-s="night" onclick="APP.schedToggleSlots(this)">晚上</span>' +
+    '</div>';
+  }
+  function screenScheduleEditor() {
+    var s = state._formSchedule;
+    if (!s) return screenCustomerList();
+    var h = nav('工作时间',
+      '<span onclick="APP.backSchedule()">‹ 返回</span>',
+      '<span class="primary" onclick="APP.saveSchedule()">保存</span>');
+    h += '<div class="content">';
+    h += '<div style="display:flex;gap:6px;margin-bottom:12px;">' +
+      '<button class="tool-btn' + (s.mode === 'weekly' ? ' on' : '') + '" onclick="APP.schedMode(\'weekly\')">每周定期</button>' +
+      '<button class="tool-btn' + (s.mode === 'monthly' ? ' on' : '') + '" onclick="APP.schedMode(\'monthly\')">每月N天</button>' +
+    '</div>';
+    if (s.mode === 'weekly') {
+      h += '<div class="group-label">工作日</div>';
+      h += weeklyRow('mon') + weeklyRow('tue') + weeklyRow('wed') + weeklyRow('thu') + weeklyRow('fri');
+      h += '<div class="group-label">周末</div>';
+      h += weeklyRow('sat') + weeklyRow('sun');
+    } else {
+      h += '<div class="filter-title">每月哪几天上班（可多选）</div>';
+      h += '<div class="cal-grid">';
+      for (var d = 1; d <= 31; d++) {
+        var on = s.days.indexOf(d) >= 0;
+        h += '<div class="cal-day' + (on ? ' selected' : '') + '" data-d="' + d + '" onclick="APP.schedToggleDay(this.dataset.d)"><div class="d">' + d + '</div></div>';
+      }
+      h += '</div>';
+      h += '<div class="filter-title" style="margin-top:14px;">班次</div>';
+      h += monthlySlotChips();
+    }
+    h += '<div id="sched-preview" style="font-size:11px;color:#999;margin-top:14px;">当前设置：' + scheduleSummaryText({ schedule: s }) + '</div>';
+    h += '</div>' + tabbar();
+    return h;
+  }
+
+  // ========== 新增 / 编辑客户 ==========
+  function screenCustomerForm() {
+    var editing = state.cEditId ? findCustomer(state.cEditId) : null;
+    var f = editing ? { name: editing.name, title: editing.title, phone: editing.phone, city: editing.city, district: editing.district, unit: editing.unit, address: editing.address }
+                    : { name: '', title: '', phone: '', city: '', district: '', unit: '', address: '' };
+    var fsSched = state._formSchedule ? state._formSchedule : (editing ? editing.schedule : null);
+    var formSchedText = fsSched && fsSched.mode ? scheduleSummaryText({ schedule: fsSched }) : '未设置';
+    var h = nav(editing ? '编辑客户' : '新增客户',
+      '<span onclick="APP.backCustomer()">取消</span>',
+      '<span class="primary" onclick="APP.saveCustomer()">保存</span>');
+    h += '<div class="content">' +
+      '<div class="field"><label>姓名</label><input class="input" id="cf-name" value="' + f.name + '" placeholder="如：王建国"></div>' +
+      '<div class="field"><label>职称</label><input class="input" id="cf-title" value="' + f.title + '" placeholder="如：主任医师"></div>' +
+      '<div class="field"><label>电话</label><input class="input" id="cf-phone" value="' + f.phone + '" placeholder="选填"></div>' +
+      '<div class="field"><label>城市</label><input class="input" id="cf-city" value="' + f.city + '" placeholder="如：上海市"></div>' +
+      '<div class="field"><label>地区</label><input class="input" id="cf-district" value="' + f.district + '" placeholder="如：浦东新区"></div>' +
+      '<div class="field"><label>工作单位</label><input class="input" id="cf-unit" value="' + f.unit + '" placeholder="如：仁济医院"></div>' +
+      '<div class="field"><label>详细地址（选填）</label><input class="input" id="cf-address" value="' + f.address + '" placeholder="如：浦东新区浦建路160号"></div>';
+    h += '<div class="field"><label>工作时间（选填）</label>' +
+      '<button class="btn-outline" style="padding:9px;font-size:13px;margin-bottom:6px;" onclick="APP.openFormSchedule()">⏰ 设置工作时间</button>' +
+      '<div class="coord-tip">' + formSchedText + '</div>' +
+    '</div>';
+    h += '<div class="field"><label>标签</label><div class="chips">' +
+      state.tags.map(function (t) {
+        var on = state._formTags.indexOf(t.id) >= 0;
+        return '<span class="chip' + (on ? ' on' : '') + '" data-id="' + t.id + '" onclick="APP.toggleFormTag(this.dataset.id)">' + t.name + '</span>';
+      }).join('') +
+      '</div></div>';
+    h += '<div class="err" id="cf-err"></div>' +
+      '<button class="btn-primary" onclick="APP.saveCustomer()">保存</button>' +
+      (editing ? '<div style="margin-top:12px;"><button class="btn-danger" data-id="' + editing.id + '" onclick="APP.confirmDeleteCustomer(this.dataset.id)">删除客户</button></div>' : '') +
+    '</div>';
+    return h;
+  }
+
+  // ========== 标签管理 ==========
+  function screenTagManager() {
+    var h = nav('标签管理', '<span onclick="APP.backCustomer()">‹ 返回</span>', '');
+    h += '<div class="content">';
+    h += '<div class="field"><label>新增标签</label><div style="display:flex;gap:6px;">' +
+      '<input class="input" id="new-tag" placeholder="输入标签名" style="flex:1;">' +
+      '<button class="btn-primary" style="flex:0 0 auto;padding:9px 14px;width:auto;" onclick="APP.addTag()">添加</button></div></div>';
+    if (state.tags.length === 0) h += '<div class="empty">暂无标签</div>';
+    state.tags.forEach(function (t) {
+      var cnt = state.customers.filter(function (c) { return c.tags.indexOf(t.id) >= 0; }).length;
+      h += '<div class="rec-row tag-row" data-id="' + t.id + '" onpointerdown="APP.tagDown(this,event)">' +
+        '<span style="flex:1;">#' + t.name + '（' + cnt + ' 人）<span style="color:#ccc;font-size:10px;"> · 长按拖动排序</span></span>' +
+        '<span style="display:flex;gap:10px;">' +
+          '<span style="color:#333;cursor:pointer;" data-id="' + t.id + '" onclick="APP.renameTag(this.dataset.id)">改</span>' +
+          '<span style="color:#333;cursor:pointer;" data-id="' + t.id + '" onclick="APP.deleteTag(this.dataset.id)">删</span>' +
+        '</span></div>';
+    });
+    h += '</div>' + tabbar();
+    return h;
+  }
+
+  // ========== 拜访计划 ==========
+  function findVisit(id) { return state.visits.find(function (v) { return String(v.id) === String(id); }); }
+  function renderVisits() {
+    var h = nav('拜访计划', '', '');
+    h += '<div class="content">';
+    if (state.visits.length === 0) h += '<div class="empty">暂无拜访计划<br><br>在「客户管理」里点客户右侧的 ＋ 添加</div>';
+    var groups = {};
+    state.visits.forEach(function (v) { (groups[v.date] = groups[v.date] || []).push(v); });
+    Object.keys(groups).sort().forEach(function (ds) {
+      var holi = holidayOf(ds);
+      h += '<div class="visit-group-date">' + ds + (holi ? '（' + holi + '）' : '') + '</div>';
+      var items = groups[ds].slice().sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0); });
+      items.forEach(function (v) {
+        var c = findCustomer(v.customerId);
+        var slotsHtml = (v.slots || []).map(function (s) { return '<span class="slot-badge">' + slotName(s) + '</span>'; }).join('');
+        h += '<div class="visit-item' + (v.done ? ' done' : '') + '">' +
+          '<span class="done-check' + (v.done ? ' on' : '') + '" data-id="' + v.id + '" onclick="APP.toggleVisitDone(this.dataset.id)">' + (v.done ? '✓' : '') + '</span>' +
+          '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:#000;">' + (c ? c.name : '未知客户') + '</div>' +
+          '<div style="font-size:11px;color:#888;">' + (c ? c.unit : '') + '</div></div>' +
+          slotsHtml +
+          '<span style="color:#333;cursor:pointer;margin-left:6px;font-size:12px;" data-id="' + v.id + '" onclick="APP.editVisit(this.dataset.id)">编辑</span>' +
+          '<span style="color:#333;cursor:pointer;margin-left:6px;font-size:12px;" data-id="' + v.id + '" onclick="APP.deleteVisit(this.dataset.id)">删除</span>' +
+        '</div>';
+      });
+    });
+    h += '</div>' + tabbar();
+    return h;
+  }
+
+  function calDayStr(offset) {
+    var d = new Date(state.calCenter + 'T00:00:00');
+    d.setDate(d.getDate() + offset);
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+  function calWeekdayName(ds) {
+    var d = new Date(ds + 'T00:00:00');
+    return ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
+  }
+  function monthGridHTML(y, m) {
+    var first = new Date(y, m, 1);
+    var startDow = first.getDay();
+    var daysInMonth = new Date(y, m + 1, 0).getDate();
+    var prevDays = new Date(y, m, 0).getDate();
+    var h = '<div class="cal-week"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>';
+    h += '<div class="cal-grid">';
+    for (var i = 0; i < startDow; i++) {
+      var pd = prevDays - startDow + 1 + i;
+      h += '<div class="cal-day other"><div class="d">' + pd + '</div></div>';
+    }
+    for (var d = 1; d <= daysInMonth; d++) {
+      var ds = dateStr(y, m, d);
+      var isToday = ds === dstr(0);
+      var isSel = ds === state.calSelected;
+      var holi = holidayOf(ds);
+      var hasSlot = state.customers.some(function (c) { return scheduleSlotsOnDate(c.schedule, ds).length > 0; });
+      h += '<div class="cal-day' + (isSel ? ' selected' : '') + '" data-ds="' + ds + '" onclick="APP.calPickDate(this.dataset.ds)"' + (isToday ? ' style="border:2px solid #000;"' : '') + '>' +
+        '<div class="d">' + d + '</div>' +
+        (holi ? '<div class="holi">' + holi + '</div>' : '') +
+        (hasSlot ? '<div class="cc-dot">●</div>' : '') +
+      '</div>';
+    }
+    h += '</div>';
+    return h;
+  }
+  function renderCalendar() {
+    var half = 3;
+    var h = nav('日历', '', '');
+    h += '<div class="content">';
+    h += '<div style="text-align:center;font-size:16px;font-weight:700;margin-bottom:6px;">' + state.calSelected + ' ' + calWeekdayName(state.calSelected) + '</div>';
+    h += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">' +
+      '<span class="nav-btn" onclick="APP.calShift(-1)">‹</span>' +
+      '<div class="cal-strip">';
+    for (var i = -half; i <= half; i++) {
+      var ds = calDayStr(i);
+      var isToday = ds === dstr(0);
+      var isSel = ds === state.calSelected;
+      var holi = holidayOf(ds);
+      var slotCnt = state.customers.filter(function (c) { return scheduleSlotsOnDate(c.schedule, ds).length > 0; }).length;
+      h += '<div class="cal-cell' + (isToday ? ' today' : '') + (isSel ? ' sel' : '') + '" data-ds="' + ds + '" onclick="APP.calSelect(this.dataset.ds)">' +
+        '<div class="cc-week">' + calWeekdayName(ds) + '</div>' +
+        '<div class="cc-day">' + Number(ds.slice(8, 10)) + '</div>' +
+        (holi ? '<div class="cc-holi">' + holi + '</div>' : (slotCnt ? '<div class="cc-dot">●</div>' : '')) +
+      '</div>';
+    }
+    h += '</div>' +
+      '<span class="nav-btn" onclick="APP.calShift(1)">›</span>' +
+    '</div>';
+    h += '<div style="display:flex;justify-content:center;margin:4px 0 10px;"><span class="nav-btn" onclick="APP.calToggleMonth()">' + (state.calMonthOpen ? '▴' : '▾') + '</span></div>';
+    if (state.calMonthOpen) {
+      h += '<div class="filter-panel" style="margin-bottom:10px;padding:10px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+          '<span class="nav-btn" onclick="APP.calMonthNav(-1)">‹</span>' +
+          '<span style="font-size:14px;font-weight:700;">' + state.calViewYear + '年' + (state.calViewMonth + 1) + '月</span>' +
+          '<span class="nav-btn" onclick="APP.calMonthNav(1)">›</span>' +
+        '</div>' + monthGridHTML(state.calViewYear, state.calViewMonth) +
+      '</div>';
+    }
+    var list = state.customers.filter(function (c) { return scheduleSlotsOnDate(c.schedule, state.calSelected).length > 0; });
+    h += '<div class="group-label">当天坐诊 / 上班客户（' + list.length + '）</div>';
+    if (list.length === 0) h += '<div class="empty">当天没有客户坐诊上班</div>';
+    list.forEach(function (c) {
+      var slots = scheduleSlotsOnDate(c.schedule, state.calSelected);
+      h += '<div class="cust-row" data-id="' + c.id + '" onclick="APP.openCustomer(this.dataset.id)">' +
+        '<div class="cust-main">' +
+          '<div class="cust-name">' + c.name + '<span class="cust-title">' + (c.title || '') + '</span></div>' +
+          '<div class="cust-unit">' + c.unit + ' · ' + c.city + c.district + '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:4px;flex-shrink:0;">' + slots.map(function (s) { return '<span class="slot-badge">' + slotName(s) + '</span>'; }).join('') + '</div>' +
+      '</div>';
+    });
+    h += '</div>' + tabbar();
+    return h;
+  }
+  function renderSettings() {
+    var activeGoals = state.goals.filter(function (g) { return !g.archived; }).length;
+    var archGoals = state.goals.length - activeGoals;
+    var doneVisits = state.visits.filter(function (v) { return v.done; }).length;
+    var h = nav('设置', '', '');
+    h += '<div class="content">';
+    h += '<div class="filter-title">数据统计</div>';
+    h += '<div class="filter-panel">' +
+      '<div class="rec-row"><span>客户</span><span>' + state.customers.length + ' 位</span></div>' +
+      '<div class="rec-row"><span>目标计划</span><span>' + activeGoals + ' 进行中 · ' + archGoals + ' 已归档</span></div>' +
+      '<div class="rec-row"><span>拜访计划</span><span>' + doneVisits + ' 已完成 · ' + (state.visits.length - doneVisits) + ' 未完成</span></div>' +
+      '<div class="rec-row"><span>标签</span><span>' + state.tags.length + ' 个</span></div>' +
+    '</div>';
+    h += '<div class="filter-title" style="margin-top:14px;">数据备份</div>';
+    h += '<div class="field"><button class="btn-primary" onclick="APP.exportData()">⬇ 导出数据（备份）</button></div>';
+    h += '<div class="field" style="margin-top:8px;"><button class="btn-outline" onclick="APP.importData()">⬆ 导入数据（恢复备份）</button>' +
+      '<input type="file" id="import-file" accept=".json,application/json" style="display:none;"></div>';
+    h += '<div style="font-size:11px;color:#888;margin-bottom:14px;">数据保存在本机浏览器。建议定期导出备份，换设备或清缓存前先导出。</div>';
+    h += '<div class="filter-title">重置</div>';
+    h += '<div class="field"><button class="btn-outline" onclick="APP.resetDemo()">恢复演示数据</button></div>';
+    h += '<div class="field" style="margin-top:8px;"><button class="btn-danger" onclick="APP.clearAll()">清空全部数据</button></div>';
+    h += '</div>' + tabbar();
+    return h;
+  }
+  function renderCustomer() {
+    if (state.cScreen === 'detail') return screenCustomerDetail();
+    if (state.cScreen === 'form') return screenCustomerForm();
+    if (state.cScreen === 'schedule') return screenScheduleEditor();
+    if (state.cScreen === 'tags') return screenTagManager();
+    return screenCustomerList();
+  }
+  function render() {
+    autoArchive();
+    var h;
+    if (state.tab === 'calendar') h = renderCalendar();
+    else if (state.tab === 'customers') h = renderCustomer();
+    else if (state.tab === 'visits') h = renderVisits();
+    else if (state.tab === 'settings') h = renderSettings();
+    else if (state.screen === 'list') h = screenList();
+    else if (state.screen === 'archive') h = screenArchive();
+    else if (state.screen === 'form') h = screenForm();
+    else if (state.screen === 'detail') h = screenDetail();
+    phone.innerHTML = h;
+  }
+
+  var APP = {
+    switchTab: function (k) {
+      state.tab = k; state.screen = 'list'; state.goalId = null;
+      state.selectMode = false; state.selected = {};
+      state.cScreen = 'list'; state.cSelId = null; state.cEditId = null;
+      state.batchMode = false; state.cSelected = {}; state.showFilter = false;
+      state._formTags = [];
+      save(); render();
+    },
+    exportData: function () {
+      var payload = {
+        version: 1,
+        exportedAt: dstr(0),
+        goals: JSON.parse(JSON.stringify(state.goals)),
+        customers: JSON.parse(JSON.stringify(state.customers)),
+        tags: JSON.parse(JSON.stringify(state.tags)),
+        visits: JSON.parse(JSON.stringify(state.visits))
+      };
+      var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = '工作台备份-' + dstr(0) + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      alert('已导出备份文件，请妥善保存');
+    },
+    importData: function () {
+      var input = document.getElementById('import-file');
+      if (!input) return;
+      input.value = '';
+      input.onchange = function () {
+        var f = input.files[0];
+        if (!f) return;
+        var rd = new FileReader();
+        rd.onload = function () {
+          var data;
+          try { data = JSON.parse(rd.result); } catch (e) { alert('导入失败：文件不是有效的 JSON'); return; }
+          if (!data || !Array.isArray(data.goals) || !Array.isArray(data.customers) || !Array.isArray(data.tags) || !Array.isArray(data.visits)) {
+            alert('导入失败：备份文件结构不完整（缺少 目标/客户/标签/拜访 数据）'); return;
+          }
+          if (window.confirm('确定用备份数据覆盖当前全部数据吗？当前数据将被替换。')) {
+            state.goals = data.goals;
+            state.customers = data.customers;
+            state.tags = data.tags;
+            state.visits = data.visits;
+            APP.resetUIState();
+            save(); render();
+            alert('导入成功');
+          }
+        };
+        rd.readAsText(f);
+      };
+      input.click();
+    },
+    resetUIState: function () {
+      state.tab = 'goals'; state.screen = 'list'; state.goalId = null;
+      state.selectMode = false; state.selected = {};
+      state.cScreen = 'list'; state.cSelId = null; state.cEditId = null; state._formTags = [];
+      state.batchMode = false; state.cSelected = {}; state.showFilter = false;
+      state.cFilter = { kw: '', city: '', district: '', unit: '', tags: [] };
+      state._formSchedule = null; state._schedFrom = null;
+    },
+    resetDemo: function () {
+      if (window.confirm('确定恢复演示数据吗？当前所有数据将被演示数据替换。')) {
+        state = JSON.parse(JSON.stringify(seed));
+        save(); render();
+        alert('已恢复演示数据');
+      }
+    },
+    clearAll: function () {
+      if (window.confirm('确定清空全部数据吗？此操作不可撤销，建议先导出备份。')) {
+        state.goals = [];
+        state.customers = [];
+        state.tags = [];
+        state.visits = [];
+        APP.resetUIState();
+        save(); render();
+        alert('已清空全部数据');
+      }
+    },
+    calShift: function (dir) {
+      var d = new Date(state.calCenter + 'T00:00:00');
+      d.setDate(d.getDate() + dir * 7);
+      state.calCenter = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+      save(); render();
+    },
+    calSelect: function (ds) { state.calSelected = ds; save(); render(); },
+    calToggleMonth: function () {
+      state.calMonthOpen = !state.calMonthOpen;
+      var sd = new Date(state.calSelected + 'T00:00:00');
+      state.calViewYear = sd.getFullYear();
+      state.calViewMonth = sd.getMonth();
+      save(); render();
+    },
+    calMonthNav: function (dir) {
+      state.calViewMonth += dir;
+      if (state.calViewMonth < 0) { state.calViewMonth = 11; state.calViewYear--; }
+      if (state.calViewMonth > 11) { state.calViewMonth = 0; state.calViewYear++; }
+      save(); render();
+    },
+    calPickDate: function (ds) {
+      state.calSelected = ds;
+      state.calCenter = ds;
+      var sd = new Date(ds + 'T00:00:00');
+      state.calViewYear = sd.getFullYear();
+      state.calViewMonth = sd.getMonth();
+      state.calMonthOpen = false;
+      save(); render();
+    },
+    back: function () {
+      if (state.screen === 'archive' || state.screen === 'form' || state.screen === 'detail') {
+        state.screen = 'list'; state.goalId = null; state.editId = null;
+      }
+      save(); render();
+    },
+    openGoal: function (id) { state.screen = 'detail'; state.goalId = id; save(); render(); },
+    openArchive: function () { state.screen = 'archive'; save(); render(); },
+    newGoal: function () { state.editId = null; state.screen = 'form'; save(); render(); },
+    enterSelect: function () { state.selectMode = true; state.selected = {}; save(); render(); },
+    finishSelect: function () { state.selectMode = false; state.selected = {}; save(); render(); },
+    toggleSelect: function (id) {
+      var key = String(id);
+      if (state.selected[key]) { delete state.selected[key]; }
+      else { state.selected[key] = true; }
+      save(); render();
+    },
+    selectAll: function () {
+      var list = state.screen === 'archive' ? archivedGoals() : activeGoals();
+      var keys = list.map(function (g) { return String(g.id); });
+      var allSelected = keys.length > 0 && keys.every(function (k) { return state.selected[k]; });
+      state.selected = {};
+      if (!allSelected) { keys.forEach(function (k) { state.selected[k] = true; }); }
+      save(); render();
+    },
+    batchArchive: function () {
+      var keys = Object.keys(state.selected);
+      if (keys.length === 0) { alert('请先选择目标'); return; }
+      state.goals.forEach(function (g) { if (state.selected[String(g.id)]) g.archived = true; });
+      state.selectMode = false; state.selected = {};
+      save(); render();
+    },
+    batchRestore: function () {
+      var keys = Object.keys(state.selected);
+      if (keys.length === 0) { alert('请先选择目标'); return; }
+      state.goals.forEach(function (g) {
+        if (!state.selected[String(g.id)]) return;
+        g.archived = false; g.done = false;
+        var t = new Date(); t.setHours(0,0,0,0);
+        var end = new Date(g.end + 'T23:59:59');
+        if (end < t) { g.end = dstr(30); }
+        var s = sumRecords(g);
+        if (s >= g.target - 1e-9) { g.target = Math.ceil(s) + 1; }
+      });
+      state.selectMode = false; state.selected = {};
+      save(); render();
+    },
+    batchDelete: function () {
+      var keys = Object.keys(state.selected);
+      if (keys.length === 0) { alert('请先选择目标'); return; }
+      if (window.confirm('确定删除选中的 ' + keys.length + ' 个目标吗？删除后不可恢复。')) {
+        state.goals = state.goals.filter(function (g) { return !state.selected[String(g.id)]; });
+        state.selectMode = false; state.selected = {};
+        save(); render();
+      }
+    },
+    editGoal: function (id) { state.editId = id; state.screen = 'form'; save(); render(); },
+    saveForm: function () {
+      var name = document.getElementById('f-name').value.trim();
+      var start = document.getElementById('f-start').value;
+      var end = document.getElementById('f-end').value;
+      var unit = document.getElementById('f-unit').value.trim();
+      var target = parseFloat(document.getElementById('f-target').value);
+      var err = document.getElementById('f-err');
+      if (!name) { err.textContent = '请填写目标名称'; return; }
+      if (!start || !end) { err.textContent = '请选择起止日期'; return; }
+      if (start > end) { err.textContent = '结束日期不能早于开始日期'; return; }
+      if (!unit) { err.textContent = '请填写单位'; return; }
+      if (!(target > 0)) { err.textContent = '目标数值需大于 0'; return; }
+      if (state.editId) {
+        var g = findGoal(state.editId);
+        g.name = name; g.start = start; g.end = end; g.unit = unit; g.target = target;
+      } else {
+        state.goals.push({ id: Date.now(), name: name, start: start, end: end, unit: unit, target: target, archived: false, records: [] });
+      }
+      state.editId = null; state.screen = 'list'; save(); render();
+    },
+    openRecord: function (id) {
+      var g = findGoal(id);
+      var box = el(
+        '<div class="modal-overlay" id="record-overlay">' +
+          '<div class="modal-box">' +
+            '<div class="modal-title">录入数据 · ' + g.name + '</div>' +
+            '<div class="field"><label>数值（' + g.unit + '）</label><input class="input" id="r-value" type="number" step="any" placeholder="如：2.5"></div>' +
+            '<div class="field"><label>日期</label><input class="input" id="r-date" type="date" value="' + dstr(0) + '"></div>' +
+            '<div class="field"><label>备注（可选）</label><input class="input" id="r-note" placeholder="如：签了大单"></div>' +
+            '<div class="err" id="r-err"></div>' +
+            '<div class="modal-actions">' +
+              '<button class="btn-primary" data-id="' + id + '" onclick="APP.confirmRecord(this.dataset.id)">确认</button>' +
+              '<button class="btn-outline" onclick="APP.closeRecord()">取消</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>');
+      document.body.appendChild(box);
+    },
+    closeRecord: function () {
+      var o = document.getElementById('record-overlay'); if (o) o.remove();
+    },
+    confirmRecord: function (id) {
+      var v = parseFloat(document.getElementById('r-value').value);
+      var d = document.getElementById('r-date').value;
+      var n = document.getElementById('r-note').value.trim();
+      var err = document.getElementById('r-err');
+      if (!(v > 0)) { err.textContent = '请输入大于 0 的数值'; return; }
+      if (!d) { err.textContent = '请选择日期'; return; }
+      findGoal(id).records.push({ date: d, value: v, note: n });
+      this.closeRecord(); save(); render();
+    },
+    restoreGoal: function (id) {
+      var g = findGoal(id);
+      g.archived = false; g.done = false;
+      var t = new Date(); t.setHours(0,0,0,0);
+      var end = new Date(g.end + 'T23:59:59');
+      var msgs = [];
+      if (end < t) { g.end = dstr(30); msgs.push('结束日期已顺延到 ' + g.end); }
+      var s = sumRecords(g);
+      if (s >= g.target - 1e-9) { g.target = Math.ceil(s) + 1; msgs.push('目标值已调整为 ' + g.target); }
+      if (msgs.length > 0) { alert('已恢复：' + msgs.join('，')); }
+      save(); render();
+    },
+    confirmDelete: function (id) {
+      var g = findGoal(id);
+      if (window.confirm('确定删除目标「' + g.name + '」吗？删除后不可恢复。')) {
+        state.goals = state.goals.filter(function (x) { return String(x.id) !== String(id); });
+        if (state.screen !== 'archive') { state.goalId = null; state.editId = null; state.screen = 'list'; }
+        save(); render();
+      }
+    },
+    // ===== 客户管理：CRUD =====
+    backCustomer: function () {
+      if (state.cScreen === 'detail' || state.cScreen === 'form' || state.cScreen === 'schedule' || state.cScreen === 'tags') {
+        state.cScreen = 'list'; state.cSelId = null; state.cEditId = null; state._formTags = [];
+      }
+      save(); render();
+    },
+    openCustomer: function (id) { state.cScreen = 'detail'; state.cSelId = id; save(); render(); },
+    newCustomer: function () { state.cEditId = null; state._formTags = []; state.cScreen = 'form'; save(); render(); },
+    editCustomer: function (id) { state.cEditId = id; state._formTags = (findCustomer(id) || { tags: [] }).tags.slice(); state.cScreen = 'form'; save(); render(); },
+    toggleFormTag: function (id) {
+      var nid = Number(id);
+      var i = state._formTags.indexOf(nid);
+      if (i >= 0) state._formTags.splice(i, 1); else state._formTags.push(nid);
+      // 只切换样式，避免重渲染丢失已填内容
+      var chip = document.querySelector('.chips .chip[data-id="' + id + '"]');
+      if (chip) chip.classList.toggle('on');
+    },
+    saveCustomer: function () {
+      var name = document.getElementById('cf-name').value.trim();
+      var title = document.getElementById('cf-title').value.trim();
+      var phone = document.getElementById('cf-phone').value.trim();
+      var city = document.getElementById('cf-city').value.trim();
+      var district = document.getElementById('cf-district').value.trim();
+      var unit = document.getElementById('cf-unit').value.trim();
+      var address = document.getElementById('cf-address').value.trim();
+      var err = document.getElementById('cf-err');
+      if (!name) { err.textContent = '请填写姓名'; return; }
+      if (!unit) { err.textContent = '请填写工作单位'; return; }
+      if (!city || !district) { err.textContent = '请填写城市和地区'; return; }
+      var sched = state._formSchedule ? JSON.parse(JSON.stringify(state._formSchedule)) : null;
+      if (state.cEditId) {
+        var c = findCustomer(state.cEditId);
+        c.name = name; c.title = title; c.phone = phone; c.city = city;
+        c.district = district; c.unit = unit; c.address = address; c.tags = state._formTags.slice();
+        if (sched) c.schedule = sched;
+      } else {
+        state.customers.push({ id: Date.now(), name: name, title: title, phone: phone, city: city,
+          district: district, unit: unit, address: address, tags: state._formTags.slice(), schedule: sched || emptySchedule(), notes: [] });
+      }
+      state.cEditId = null; state._formTags = []; state._formSchedule = null; state.cScreen = 'list'; save(); render();
+    },
+    confirmDeleteCustomer: function (id) {
+      var c = findCustomer(id);
+      if (window.confirm('确定删除客户「' + c.name + '」吗？其拜访计划也会一并删除。')) {
+        state.customers = state.customers.filter(function (x) { return String(x.id) !== String(id); });
+        state.visits = state.visits.filter(function (v) { return String(v.customerId) !== String(id); });
+        state.cSelId = null; state.cEditId = null; state.cScreen = 'list';
+        save(); render();
+      }
+    },
+    // ===== 客户管理：搜索筛选 =====
+    setKw: function (v) {
+      state.cFilter.kw = v;
+      save();
+      var list = document.getElementById('cust-list');
+      if (list) { list.innerHTML = customerListHTML(); }
+      else { render(); }
+    },
+    toggleFilterPanel: function () { state.showFilter = !state.showFilter; save(); render(); },
+    setCity: function (v) { state.cFilter.city = (state.cFilter.city === v ? '' : v); state.cFilter.district = ''; state.cFilter.unit = ''; save(); render(); },
+    setDistrict: function (v) { state.cFilter.district = (state.cFilter.district === v ? '' : v); state.cFilter.unit = ''; save(); render(); },
+    setUnit: function (v) { state.cFilter.unit = (state.cFilter.unit === v ? '' : v); save(); render(); },
+    toggleTagFilter: function (id) {
+      var nid = Number(id);
+      var i = state.cFilter.tags.indexOf(nid);
+      if (i >= 0) state.cFilter.tags.splice(i, 1); else state.cFilter.tags.push(nid);
+      save(); render();
+    },
+    clearFilter: function () {
+      state.cFilter = { kw: '', city: '', district: '', unit: '', tags: [] };
+      state.showFilter = false; save(); render();
+    }
+    ,
+    // ===== 客户管理：工作时间（循环模式） =====
+    openSchedule: function (id) {
+      var c = findCustomer(id);
+      state.cSelId = id;
+      state._schedFrom = 'detail';
+      state._formSchedule = JSON.parse(JSON.stringify(c.schedule && c.schedule.mode ? c.schedule : emptySchedule()));
+      state.cScreen = 'schedule'; save(); render();
+    },
+    openFormSchedule: function () {
+      state._schedFrom = 'form';
+      var base = null;
+      if (state.cEditId) { var ec = findCustomer(state.cEditId); if (ec) base = ec.schedule; }
+      state._formSchedule = state._formSchedule || JSON.parse(JSON.stringify(base && base.mode ? base : emptySchedule()));
+      state.cScreen = 'schedule'; save(); render();
+    },
+    schedMode: function (m) {
+      var s = state._formSchedule;
+      if (s.mode === m) return;
+      s.mode = m;
+      if (m === 'weekly') { if (!s.week) s.week = emptyWeekly(); }
+      else { if (!s.days) s.days = []; if (!s.slots) s.slots = []; }
+      save(); render();
+    },
+    schedToggleSlot: function (el2) {
+      var k = el2.dataset.k, s = el2.dataset.s;
+      if (!state._formSchedule.week[k]) state._formSchedule.week[k] = [];
+      var arr = state._formSchedule.week[k];
+      var i = arr.indexOf(s);
+      if (i >= 0) { arr.splice(i, 1); el2.classList.remove('on'); }
+      else { arr.push(s); el2.classList.add('on'); }
+      APP.updateSchedPreview();
+    },
+    schedToggleDay: function (d) {
+      var n = Number(d);
+      var days = state._formSchedule.days;
+      var i = days.indexOf(n);
+      if (i >= 0) { days.splice(i, 1); }
+      else { days.push(n); }
+      var el2 = document.querySelector('.cal-day[data-d="' + d + '"]');
+      if (el2) el2.classList.toggle('selected', days.indexOf(n) >= 0);
+      APP.updateSchedPreview();
+    },
+    schedToggleSlots: function (el2) {
+      var s = el2.dataset.s;
+      if (!state._formSchedule.slots) state._formSchedule.slots = [];
+      var arr = state._formSchedule.slots;
+      var i = arr.indexOf(s);
+      if (i >= 0) { arr.splice(i, 1); el2.classList.remove('on'); }
+      else { arr.push(s); el2.classList.add('on'); }
+      APP.updateSchedPreview();
+    },
+    updateSchedPreview: function () {
+      var el2 = document.getElementById('sched-preview');
+      if (el2) el2.textContent = '当前设置：' + scheduleSummaryText({ schedule: state._formSchedule });
+    },
+    backSchedule: function () {
+      var from = state._schedFrom || 'detail';
+      state._schedFrom = null;
+      state.cScreen = from === 'form' ? 'form' : 'detail';
+      save(); render();
+    },
+    saveSchedule: function () {
+      var from = state._schedFrom || 'detail';
+      var sched = JSON.parse(JSON.stringify(state._formSchedule));
+      if (from === 'form') {
+        state._schedFrom = null;
+        state.cScreen = 'form';
+      } else {
+        var c = findCustomer(state.cSelId);
+        if (c) c.schedule = sched;
+        state._schedFrom = null;
+        state.cScreen = 'detail';
+      }
+      save(); render();
+    },
+    // ===== 客户管理：备注（可插图） =====
+    addNote: function (id) {
+      var c = findCustomer(id);
+      state._noteImg = null;
+      var box = el('<div class="modal-overlay" id="note-overlay"><div class="modal-box">' +
+        '<div class="modal-title">添加备注 · ' + c.name + '</div>' +
+        '<div class="field"><label>备注内容</label><textarea class="input" id="n-text" rows="3" placeholder="写点什么..."></textarea></div>' +
+        '<div class="field"><label>插入图片（可选）</label>' +
+          '<div style="display:flex;gap:8px;align-items:center;">' +
+            '<input type="file" id="n-file" accept="image/*" style="display:none;">' +
+            '<button class="btn-outline" style="padding:8px;font-size:12px;" onclick="document.getElementById(\'n-file\').click()">选择图片</button>' +
+            '<span id="n-imgname" style="font-size:11px;color:#888;"></span>' +
+          '</div>' +
+          '<img id="n-preview" style="display:none;max-width:100%;max-height:120px;border:1px solid #E5E5E5;border-radius:6px;margin-top:6px;">' +
+        '</div>' +
+        '<div class="modal-actions"><button class="btn-outline" onclick="APP.closeModal(\'note-overlay\')">取消</button>' +
+        '<button class="btn-primary" onclick="APP.saveNote(' + id + ')">保存</button></div></div></div>');
+      document.body.appendChild(box);
+      document.getElementById('n-file').addEventListener('change', function (ev) {
+        var f = ev.target.files[0];
+        if (!f) return;
+        var rd = new FileReader();
+        rd.onload = function () {
+          document.getElementById('n-preview').src = rd.result;
+          document.getElementById('n-preview').style.display = 'block';
+          document.getElementById('n-imgname').textContent = f.name;
+          state._noteImg = rd.result;
+        };
+        rd.readAsDataURL(f);
+      });
+    },
+    saveNote: function (id) {
+      var c = findCustomer(id);
+      var txt = document.getElementById('n-text').value.trim();
+      if (!txt && !state._noteImg) { alert('请填写内容或插入图片'); return; }
+      c.notes.push({ id: Date.now(), text: txt, image: state._noteImg || null, date: dstr(0) });
+      state._noteImg = null;
+      this.closeModal('note-overlay'); save(); render();
+    },
+    // ===== 客户管理：标签管理 =====
+    openTagManager: function () { state.cScreen = 'tags'; save(); render(); },
+    addTag: function () {
+      var v = document.getElementById('new-tag').value.trim();
+      if (!v) { alert('请输入标签名'); return; }
+      state.tags.push({ id: Date.now(), name: v });
+      save(); render();
+    },
+    tagDown: function (el, ev) {
+      if (ev && ev.button !== undefined && ev.button !== 0) return;
+      var d = { id: el.dataset.id, active: false, startX: ev.clientX, startY: ev.clientY, timer: null, onMove: null, onUp: null };
+      state._tagDrag = d;
+      d.onMove = function (e) { APP.tagMove(e); };
+      d.onUp = function () { APP.tagUp(); };
+      document.addEventListener('pointermove', d.onMove);
+      document.addEventListener('pointerup', d.onUp);
+      document.addEventListener('pointercancel', d.onUp);
+      d.timer = setTimeout(function () {
+        if (!state._tagDrag) return;
+        state._tagDrag.active = true;
+        var row = document.querySelector('.tag-row[data-id="' + state._tagDrag.id + '"]');
+        if (row) row.classList.add('dragging');
+      }, 500);
+    },
+    tagMove: function (ev) {
+      var d = state._tagDrag;
+      if (!d) return;
+      if (!d.active) {
+        if (Math.abs(ev.clientX - d.startX) > 10 || Math.abs(ev.clientY - d.startY) > 10) {
+          clearTimeout(d.timer);
+          APP.tagUp();
+        }
+        return;
+      }
+      var target = document.elementFromPoint(ev.clientX, ev.clientY);
+      var trow = target ? target.closest('.tag-row') : null;
+      if (!trow) return;
+      var dragRow = document.querySelector('.tag-row[data-id="' + d.id + '"]');
+      if (!dragRow || dragRow === trow) return;
+      var si = state.tags.findIndex(function (t) { return String(t.id) === String(d.id); });
+      var ti = state.tags.findIndex(function (t) { return String(t.id) === String(trow.dataset.id); });
+      if (si < 0 || ti < 0) return;
+      var tmp = state.tags[si]; state.tags[si] = state.tags[ti]; state.tags[ti] = tmp;
+      var parent = dragRow.parentNode;
+      parent.insertBefore(dragRow, trow);
+      parent.insertBefore(trow, dragRow);
+    },
+    tagUp: function () {
+      var d = state._tagDrag;
+      if (!d) return;
+      clearTimeout(d.timer);
+      document.removeEventListener('pointermove', d.onMove);
+      document.removeEventListener('pointerup', d.onUp);
+      document.removeEventListener('pointercancel', d.onUp);
+      state._tagDrag = null;
+      if (d.active) {
+        var row = document.querySelector('.tag-row[data-id="' + d.id + '"]');
+        if (row) row.classList.remove('dragging');
+        save(); render();
+      }
+    },
+    renameTag: function (id) {
+      var t = findTag(id);
+      var v = window.prompt('修改标签名', t.name);
+      if (v && v.trim()) { t.name = v.trim(); save(); render(); }
+    },
+    deleteTag: function (id) {
+      var t = findTag(id);
+      if (window.confirm('删除标签「' + t.name + '」？客户上的该标签也会被移除。')) {
+        state.tags = state.tags.filter(function (x) { return String(x.id) !== String(id); });
+        state.customers.forEach(function (c) { c.tags = c.tags.filter(function (tid) { return String(tid) !== String(id); }); });
+        save(); render();
+      }
+    },
+    // ===== 客户管理：拜访计划 =====
+    addVisit: function (id) {
+      var c = findCustomer(id);
+      state._visitCustomer = id; state._visitSlots = ['am']; state._visitEditId = null;
+      var box = el('<div class="modal-overlay" id="visit-overlay"><div class="modal-box">' +
+        '<div class="modal-title">添加拜访 · ' + c.name + '</div>' +
+        '<div class="field"><label>拜访日期</label><input class="input" id="v-date" type="date" value="' + dstr(1) + '"></div>' +
+        '<div class="field"><label>当日班次（可多选）</label><div class="chips" style="justify-content:center;">' +
+          '<span class="chip on" id="v-am" onclick="APP.toggleVisitSlot(this,\'am\')">上午</span>' +
+          '<span class="chip" id="v-pm" onclick="APP.toggleVisitSlot(this,\'pm\')">下午</span>' +
+          '<span class="chip" id="v-night" onclick="APP.toggleVisitSlot(this,\'night\')">晚上</span>' +
+        '</div></div>' +
+        '<div class="modal-actions"><button class="btn-primary" onclick="APP.saveVisit()">确定</button>' +
+        '<button class="btn-outline" onclick="APP.closeModal(\'visit-overlay\')">取消</button></div></div></div>');
+      document.body.appendChild(box);
+    },
+    editVisit: function (id) {
+      var v = findVisit(id);
+      if (!v) return;
+      var c = findCustomer(v.customerId);
+      state._visitEditId = id; state._visitCustomer = v.customerId; state._visitSlots = (v.slots || []).slice();
+      var opts = state.customers.map(function (cc) {
+        return '<option value="' + cc.id + '"' + (String(cc.id) === String(v.customerId) ? ' selected' : '') + '>' + cc.name + '</option>';
+      }).join('');
+      var box = el('<div class="modal-overlay" id="visit-overlay"><div class="modal-box">' +
+        '<div class="modal-title">编辑拜访 · ' + (c ? c.name : '') + '</div>' +
+        '<div class="field"><label>客户</label><select class="input" id="v-cust">' + opts + '</select></div>' +
+        '<div class="field"><label>拜访日期</label><input class="input" id="v-date" type="date" value="' + v.date + '"></div>' +
+        '<div class="field"><label>当日班次（可多选）</label><div class="chips" style="justify-content:center;">' +
+          '<span class="chip' + ((v.slots || []).indexOf('am') >= 0 ? ' on' : '') + '" id="v-am" onclick="APP.toggleVisitSlot(this,\'am\')">上午</span>' +
+          '<span class="chip' + ((v.slots || []).indexOf('pm') >= 0 ? ' on' : '') + '" id="v-pm" onclick="APP.toggleVisitSlot(this,\'pm\')">下午</span>' +
+          '<span class="chip' + ((v.slots || []).indexOf('night') >= 0 ? ' on' : '') + '" id="v-night" onclick="APP.toggleVisitSlot(this,\'night\')">晚上</span>' +
+        '</div></div>' +
+        '<div class="modal-actions"><button class="btn-primary" onclick="APP.saveVisitEdit()">确定</button>' +
+        '<button class="btn-outline" onclick="APP.closeModal(\'visit-overlay\')">取消</button></div></div></div>');
+      document.body.appendChild(box);
+    },
+    toggleVisitSlot: function (el2, s) {
+      var arr = state._visitSlots || (state._visitSlots = []);
+      var i = arr.indexOf(s);
+      if (i >= 0) { arr.splice(i, 1); el2.classList.remove('on'); }
+      else { arr.push(s); el2.classList.add('on'); }
+    },
+    saveVisit: function () {
+      var d = document.getElementById('v-date').value;
+      if (!d) { alert('请选择日期'); return; }
+      if (!state._visitSlots || !state._visitSlots.length) { alert('请至少选择一个班次'); return; }
+      state.visits.push({ id: Date.now(), customerId: state._visitCustomer, date: d, slots: state._visitSlots.slice(), done: false });
+      state._visitCustomer = null; state._visitSlots = null; state._visitEditId = null;
+      this.closeModal('visit-overlay'); save(); render();
+    },
+    saveVisitEdit: function () {
+      var v = findVisit(state._visitEditId);
+      if (!v) { this.closeModal('visit-overlay'); return; }
+      if (!state._visitSlots || !state._visitSlots.length) { alert('请至少选择一个班次'); return; }
+      v.customerId = document.getElementById('v-cust').value;
+      v.date = document.getElementById('v-date').value;
+      v.slots = state._visitSlots.slice();
+      state._visitCustomer = null; state._visitSlots = null; state._visitEditId = null;
+      this.closeModal('visit-overlay'); save(); render();
+    },
+    toggleVisitDone: function (id) {
+      var v = findVisit(id);
+      if (v) { v.done = !v.done; save(); render(); }
+    },
+    deleteVisit: function (id) {
+      state.visits = state.visits.filter(function (v) { return String(v.id) !== String(id); });
+      save(); render();
+    },
+    // ===== 客户管理：批量编辑 =====
+    enterBatch: function () { state.batchMode = true; state.cSelected = {}; save(); render(); },
+    finishBatch: function () { state.batchMode = false; state.cSelected = {}; save(); render(); },
+    toggleCustomerSel: function (id) {
+      var key = String(id);
+      if (state.cSelected[key]) delete state.cSelected[key];
+      else state.cSelected[key] = true;
+      save(); render();
+    },
+    batchEditAddr: function () {
+      var keys = Object.keys(state.cSelected);
+      if (!keys.length) { alert('请先选择客户'); return; }
+      state._batchScope = 'once';
+      var box = el('<div class="modal-overlay" id="batchaddr-overlay"><div class="modal-box">' +
+        '<div class="modal-title">批量修改地址（' + keys.length + ' 位客户）</div>' +
+        '<div class="field"><label>新地址</label><input class="input" id="ba-addr" placeholder="如：浦东新区浦建路160号"></div>' +
+        '<div class="field"><label>影响范围</label><div class="chips">' +
+          '<span class="chip on" id="ba-once" onclick="APP.pickBatchScope(this,\'once\')">仅改动本周本次排班</span>' +
+          '<span class="chip" id="ba-forever" onclick="APP.pickBatchScope(this,\'forever\')">永久修改后续全部排班</span>' +
+        '</div></div>' +
+        '<div class="modal-actions"><button class="btn-outline" onclick="APP.closeModal(\'batchaddr-overlay\')">取消</button>' +
+        '<button class="btn-primary" onclick="APP.doBatchAddr()">确定</button></div></div></div>');
+      document.body.appendChild(box);
+    },
+    pickBatchScope: function (el2, s) {
+      state._batchScope = s;
+      ['once','forever'].forEach(function (k) {
+        var e = document.getElementById('ba-' + k);
+        if (e) e.classList.toggle('on', k === s);
+      });
+    },
+    doBatchAddr: function () {
+      var addr = document.getElementById('ba-addr').value.trim();
+      if (!addr) { alert('请输入新地址'); return; }
+      var keys = Object.keys(state.cSelected);
+      state.customers.forEach(function (c) {
+        if (state.cSelected[String(c.id)]) c.address = addr;
+      });
+      this.closeModal('batchaddr-overlay');
+      alert('已修改 ' + keys.length + ' 位客户地址');
+      state.batchMode = false; state.cSelected = {}; save(); render();
+    },
+    batchEditSched: function () {
+      var keys = Object.keys(state.cSelected);
+      if (!keys.length) { alert('请先选择客户'); return; }
+      state._batchMode = 'weekly'; state._batchWork = []; state._batchWeekend = []; state._batchDays = []; state._batchSlots = [];
+      var box = el('<div class="modal-overlay" id="batchsched-overlay"><div class="modal-box">' +
+        '<div class="modal-title">批量设置工作时间（' + keys.length + ' 位客户）</div>' +
+        '<div class="field"><label>循环模式</label><div class="chips" style="justify-content:center;">' +
+          '<span class="chip on" id="bm-weekly" onclick="APP.batchMode(this,\'weekly\')">每周定期</span>' +
+          '<span class="chip" id="bm-monthly" onclick="APP.batchMode(this,\'monthly\')">每月N天</span>' +
+        '</div></div>' +
+        '<div id="bm-weekly-box">' +
+          '<div class="field"><label>工作日（周一~周五）班次</label><div class="chips" style="justify-content:center;">' +
+            '<span class="chip" data-s="am" onclick="APP.batchSlot(this,\'work\')">上午</span>' +
+            '<span class="chip" data-s="pm" onclick="APP.batchSlot(this,\'work\')">下午</span>' +
+            '<span class="chip" data-s="night" onclick="APP.batchSlot(this,\'work\')">晚上</span>' +
+          '</div></div>' +
+          '<div class="field"><label>周末（周六~周日）班次</label><div class="chips" style="justify-content:center;">' +
+            '<span class="chip" data-s="am" onclick="APP.batchSlot(this,\'weekend\')">上午</span>' +
+            '<span class="chip" data-s="pm" onclick="APP.batchSlot(this,\'weekend\')">下午</span>' +
+            '<span class="chip" data-s="night" onclick="APP.batchSlot(this,\'weekend\')">晚上</span>' +
+          '</div></div>' +
+        '</div>' +
+        '<div id="bm-monthly-box" style="display:none;">' +
+          '<div class="field"><label>每月几号（逗号分隔，如 5,15,25）</label><input class="input" id="bm-days" placeholder="如：5,15,25"></div>' +
+          '<div class="field"><label>班次</label><div class="chips" style="justify-content:center;">' +
+            '<span class="chip" data-s="am" onclick="APP.batchSlot(this,\'slots\')">上午</span>' +
+            '<span class="chip" data-s="pm" onclick="APP.batchSlot(this,\'slots\')">下午</span>' +
+            '<span class="chip" data-s="night" onclick="APP.batchSlot(this,\'slots\')">晚上</span>' +
+          '</div></div>' +
+        '</div>' +
+        '<div class="modal-actions"><button class="btn-outline" onclick="APP.closeModal(\'batchsched-overlay\')">取消</button>' +
+        '<button class="btn-primary" onclick="APP.doBatchSched()">确定</button></div></div></div>');
+      document.body.appendChild(box);
+    },
+    batchMode: function (el2, m) {
+      state._batchMode = m;
+      var w = document.getElementById('bm-weekly'), mo = document.getElementById('bm-monthly');
+      if (w) w.classList.toggle('on', m === 'weekly');
+      if (mo) mo.classList.toggle('on', m === 'monthly');
+      var wb = document.getElementById('bm-weekly-box'), mb = document.getElementById('bm-monthly-box');
+      if (wb) wb.style.display = m === 'weekly' ? '' : 'none';
+      if (mb) mb.style.display = m === 'monthly' ? '' : 'none';
+    },
+    batchSlot: function (el2, group) {
+      var s = el2.dataset.s;
+      var key = group === 'work' ? '_batchWork' : group === 'weekend' ? '_batchWeekend' : '_batchSlots';
+      var arr = state[key];
+      var i = arr.indexOf(s);
+      if (i >= 0) { arr.splice(i, 1); el2.classList.remove('on'); }
+      else { arr.push(s); el2.classList.add('on'); }
+    },
+    doBatchSched: function () {
+      var keys = Object.keys(state.cSelected);
+      var m = state._batchMode;
+      var sched;
+      if (m === 'weekly') {
+        var w = emptyWeekly();
+        ['mon','tue','wed','thu','fri'].forEach(function (k) { w[k] = state._batchWork.slice(); });
+        ['sat','sun'].forEach(function (k) { w[k] = state._batchWeekend.slice(); });
+        sched = { mode: 'weekly', week: w };
+      } else {
+        var days = (document.getElementById('bm-days').value || '').split(/[,，\s]+/).map(function (x) { return Number(x); }).filter(function (n) { return n >= 1 && n <= 31; });
+        sched = { mode: 'monthly', days: days, slots: state._batchSlots.slice() };
+      }
+      state.customers.forEach(function (c) {
+        if (state.cSelected[String(c.id)]) c.schedule = JSON.parse(JSON.stringify(sched));
+      });
+      this.closeModal('batchsched-overlay');
+      alert('已为 ' + keys.length + ' 位客户设置工作时间');
+      state.batchMode = false; state.cSelected = {}; save(); render();
+    },
+    closeModal: function (id) {
+      var o = document.getElementById(id); if (o) o.remove();
+    }
+  };
+  window.APP = APP;
+
+  function el(html) { var d = document.createElement('div'); d.innerHTML = html; return d.firstElementChild; }
+
+  render();
+})();
+</script>
+<script>
+  // PWA 全屏检测（standalone 模式填满屏幕）
+  document.addEventListener('DOMContentLoaded', function () {
+    var isStandalone = false;
+    try {
+      if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) isStandalone = true;
+      if (navigator.standalone === true) isStandalone = true;
+    } catch (e) {}
+    if (isStandalone) document.body.classList.add('standalone');
+  });
+  // 注册 Service Worker（离线缓存）
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./sw.js').catch(function () {});
+    });
+  }
+</script>
+</body>
+</html>
