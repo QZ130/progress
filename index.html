@@ -14,17 +14,16 @@
 <title>目标计划 · 可交互原型</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { overflow-x: hidden; }
   body {
     background: #EEEEEE;
     font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
-    display: flex; justify-content: center; padding: 20px 8px 40px;
+    display: flex; justify-content: center; padding: 0;
   }
-  .page-note { position: fixed; top: 10px; left: 12px; font-size: 12px; color: #888; z-index: 5; }
   .phone {
     width: 100%; max-width: 400px; background: #fff;
-    border: 2px solid #111; border-radius: 30px;
-    height: 800px; display: flex; flex-direction: column;
-    box-shadow: 0 14px 40px rgba(0,0,0,0.18); overflow: hidden;
+    height: 100vh; display: flex; flex-direction: column;
+    overflow: hidden;
   }
   .screen { flex: 1; display: flex; flex-direction: column; min-height: 0; }
   .nav {
@@ -189,15 +188,21 @@
 
   /* ===== 左侧栏布局 ===== */
   .layout { display: flex; flex: 1; min-height: 0; }
-  .sidebar { width: 74px; border-right: 1px solid #000; background: #fff; display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; }
-  .side-item { padding: 16px 4px; text-align: center; cursor: pointer; font-size: 10px; color: #666; }
-  .side-item .side-ic { font-size: 20px; display: block; margin-bottom: 3px; }
-  .side-item.active { background: #000; color: #fff; }
+  .sidebar { width: 20%; min-width: 56px; border-right: 1px solid #E5E5E5; background: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+  .side-brand { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 16px 4px 12px; border-bottom: 1px solid #E5E5E5; }
+  .brand-dot { width: 14px; height: 14px; background: #111; border-radius: 3px; }
+  .brand-text { font-size: 13px; font-weight: 700; color: #111; letter-spacing: 0.5px; }
+  .side-nav { padding: 12px 8px; display: flex; flex-direction: column; gap: 4px; }
+  .side-item { padding: 11px 4px; text-align: center; cursor: pointer; font-size: 12px; color: #666; border-radius: 6px; transition: background 0.12s, transform 0.08s; }
+  .side-item:hover { background: #F3F3F3; }
+  .side-item:active { transform: scale(0.97); }
+  .side-item.active { background: #111; color: #fff; }
   .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   @media (min-width: 768px) {
-    .sidebar { width: 150px; }
-    .side-item { font-size: 13px; text-align: left; padding: 18px; display: flex; align-items: center; gap: 10px; }
-    .side-item .side-ic { font-size: 18px; margin-bottom: 0; }
+    .sidebar { width: 140px; }
+    .side-brand { justify-content: flex-start; padding: 20px 18px 14px; }
+    .side-nav { padding: 14px 12px; gap: 6px; }
+    .side-item { font-size: 13px; text-align: left; padding: 12px 14px; }
   }
   /* ===== PWA 全屏适配 ===== */
   body.standalone { background: #fff; padding: 0; }
@@ -206,8 +211,8 @@
   body.standalone .phone { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
 </style>
 </head>
+
 <body>
-<div class="page-note">目标计划 · 可交互原型（黑白极简）</div>
 <div class="phone" id="phone"></div>
 
 <script>
@@ -384,11 +389,11 @@
 
   function tabbar() {
     var tabs = [
-      { key: 'calendar', ic: '📅', label: '日历' },
-      { key: 'goals', ic: '🎯', label: '目标计划' },
-      { key: 'customers', ic: '👥', label: '客户管理' },
-      { key: 'visits', ic: '📝', label: '拜访计划' },
-      { key: 'settings', ic: '⚙️', label: '设置' }
+      { key: 'calendar', label: '日历' },
+      { key: 'goals', label: '目标计划' },
+      { key: 'customers', label: '客户管理' },
+      { key: 'visits', label: '拜访计划' },
+      { key: 'settings', label: '设置' }
     ];
     var h = '<div class="tabbar">';
     tabs.forEach(function (t) {
@@ -782,6 +787,13 @@
   }
 
   // ========== 新增 / 编辑客户 ==========
+  function formTagChipsHTML() {
+    var h = state.tags.map(function (t) {
+      var on = state._formTags.indexOf(t.id) >= 0;
+      return '<span class="chip' + (on ? ' on' : '') + '" data-id="' + t.id + '" onclick="APP.toggleFormTag(this.dataset.id)">' + t.name + '</span>';
+    }).join('');
+    return h + '<span class="chip" style="border-style:dashed;" onclick="APP.formAddTag()">＋ 新建标签</span>';
+  }
   function screenCustomerForm() {
     var editing = state.cEditId ? findCustomer(state.cEditId) : null;
     var f = editing ? { name: editing.name, title: editing.title, phone: editing.phone, city: editing.city, district: editing.district, unit: editing.unit, address: editing.address }
@@ -805,12 +817,7 @@
       '<button class="btn-outline" style="padding:9px;font-size:13px;margin-bottom:6px;" onclick="APP.openFormSchedule()">⏰ 设置工作时间</button>' +
       '<div class="coord-tip">' + formSchedText + '</div>' +
     '</div>';
-    h += '<div class="field"><label>标签</label><div class="chips">' +
-      state.tags.map(function (t) {
-        var on = state._formTags.indexOf(t.id) >= 0;
-        return '<span class="chip' + (on ? ' on' : '') + '" data-id="' + t.id + '" onclick="APP.toggleFormTag(this.dataset.id)">' + t.name + '</span>';
-      }).join('') +
-      '</div></div>';
+    h += '<div class="field"><label>标签</label><div class="chips" id="form-tag-chips">' + formTagChipsHTML() + '</div></div>';
     h += '<div class="err" id="cf-err"></div>' +
       '<button class="btn-primary" onclick="APP.saveCustomer()">保存</button>' +
       (editing ? '<div style="margin-top:12px;"><button class="btn-danger" data-id="' + editing.id + '" onclick="APP.confirmDeleteCustomer(this.dataset.id)">删除客户</button></div>' : '') +
@@ -1010,17 +1017,19 @@
   }
   function sidebar() {
     var items = [
-      { key: 'calendar', ic: '📅', label: '日历' },
-      { key: 'goals', ic: '🎯', label: '目标计划' },
-      { key: 'customers', ic: '👥', label: '客户管理' },
-      { key: 'visits', ic: '📝', label: '拜访计划' },
-      { key: 'settings', ic: '⚙️', label: '设置' }
+      { key: 'calendar', label: '日历' },
+      { key: 'goals', label: '目标计划' },
+      { key: 'customers', label: '客户管理' },
+      { key: 'visits', label: '拜访计划' },
+      { key: 'settings', label: '设置' }
     ];
     var h = '<div class="sidebar">';
+    h += '<div class="side-brand"><span class="brand-dot"></span><span class="brand-text">progress</span></div>';
+    h += '<div class="side-nav">';
     items.forEach(function (it) {
-      h += '<div class="side-item' + (state.tab === it.key ? ' active' : '') + '" data-key="' + it.key + '" onclick="APP.switchTab(this.dataset.key)">' +
-        '<span class="side-ic">' + it.ic + '</span><span class="side-label">' + it.label + '</span></div>';
+      h += '<div class="side-item' + (state.tab === it.key ? ' active' : '') + '" data-key="' + it.key + '" onclick="APP.switchTab(this.dataset.key)">' + it.label + '</div>';
     });
+    h += '</div>';
     return h + '</div>';
   }
   function render() {
@@ -1296,6 +1305,27 @@
       // 只切换样式，避免重渲染丢失已填内容
       var chip = document.querySelector('.chips .chip[data-id="' + id + '"]');
       if (chip) chip.classList.toggle('on');
+    },
+    formAddTag: function () {
+      var box = el('<div class="modal-overlay" id="addtag-overlay"><div class="modal-box">' +
+        '<div class="modal-title">新建标签</div>' +
+        '<div class="field"><input class="input" id="new-tag-input" placeholder="输入标签名"></div>' +
+        '<div class="modal-actions"><button class="btn-primary" onclick="APP.doFormAddTag()">确定</button>' +
+        '<button class="btn-outline" onclick="APP.closeModal(\'addtag-overlay\')">取消</button></div></div></div>');
+      document.body.appendChild(box);
+      document.getElementById('new-tag-input').focus();
+    },
+    doFormAddTag: function () {
+      var v = document.getElementById('new-tag-input').value.trim();
+      if (!v) { alert('请输入标签名'); return; }
+      var newId = Date.now();
+      state.tags.push({ id: newId, name: v });
+      if (state._formTags.indexOf(newId) < 0) state._formTags.push(newId);
+      this.closeModal('addtag-overlay');
+      // 局部更新表单标签 chips（不整页重渲染，避免丢失已填输入）
+      var chips = document.getElementById('form-tag-chips');
+      if (chips) chips.innerHTML = formTagChipsHTML();
+      save();
     },
     saveCustomer: function () {
       var name = document.getElementById('cf-name').value.trim();
