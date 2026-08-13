@@ -35,7 +35,7 @@
   .nav-btn { font-size: 14px; color: #333; cursor: pointer; background: none; border: none; padding: 4px 0; }
   .nav-btn.primary { font-weight: 700; color: #000; }
   .nav-btn:disabled { color: #bbb; }
-  .content { flex: 1; overflow-y: auto; padding: 16px 18px 90px; }
+  .content { flex: 1; overflow-y: auto; padding: 16px 18px 20px; }
   .sub { font-size: 12px; color: #666; margin-bottom: 12px; }
   .card {
     border: 1px solid #000; border-radius: 8px; padding: 12px;
@@ -187,6 +187,18 @@
   .tag-row.dragging { background: #F3F3F3; opacity: 0.6; cursor: grabbing; }
 
 </head>
+  /* ===== 左侧栏布局 ===== */
+  .layout { display: flex; flex: 1; min-height: 0; }
+  .sidebar { width: 74px; border-right: 1px solid #000; background: #fff; display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; }
+  .side-item { padding: 16px 4px; text-align: center; cursor: pointer; font-size: 10px; color: #666; }
+  .side-item .side-ic { font-size: 20px; display: block; margin-bottom: 3px; }
+  .side-item.active { background: #000; color: #fff; }
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  @media (min-width: 768px) {
+    .sidebar { width: 150px; }
+    .side-item { font-size: 13px; text-align: left; padding: 18px; display: flex; align-items: center; gap: 10px; }
+    .side-item .side-ic { font-size: 18px; margin-bottom: 0; }
+  }
   /* ===== PWA 全屏适配 ===== */
   body.standalone { background: #fff; padding: 0; }
   body.standalone .page-note { display: none; }
@@ -209,46 +221,16 @@
   function fmtDate(s) { return s.slice(5).replace('-', '/'); }
 
   var seed = {
-    goals: [
-      { id: 1, name: '8月销售目标', start: '2026-08-01', end: '2026-08-31', unit: '万元', target: 10, archived: false,
-        records: [ { date: '2026-08-01', value: 2.7, note: '' }, { date: '2026-08-03', value: 1.5, note: '签了大单' }, { date: '2026-08-05', value: 2.0, note: '' } ] },
-      { id: 2, name: 'Q3季度目标', start: '2026-07-01', end: '2026-09-30', unit: '万元', target: 30, archived: false,
-        records: [ { date: '2026-07-05', value: 3.0, note: '' }, { date: '2026-07-20', value: 2.0, note: '新客户' }, { date: '2026-08-02', value: 1.2, note: '' } ] },
-      { id: 3, name: '7月销售目标', start: '2026-07-01', end: '2026-07-31', unit: '万元', target: 10, archived: true, done: true,
-        records: [ { date: '2026-07-02', value: 3.0, note: '' }, { date: '2026-07-15', value: 5.0, note: '大客户签约' }, { date: '2026-07-28', value: 4.0, note: '' } ] },
-      { id: 4, name: '6月客户拜访', start: '2026-06-01', end: '2026-06-30', unit: '次', target: 20, archived: true, done: false,
-        records: [ { date: '2026-06-05', value: 2, note: '' }, { date: '2026-06-18', value: 3, note: '' } ] }
-    ],
+    goals: [],
     tab: 'goals',
     screen: 'list',
     selectMode: false,
     selected: {},
     goalId: null,
     editId: null,
-    customers: [
-      { id: 1, name: '王建国', title: '主任医师', phone: '138****0001', city: '上海市', district: '浦东新区', unit: '仁济医院', address: '浦东新区浦建路160号', tags: [2,5],
-        schedule: { mode: 'weekly', week: { mon: ['am'], tue: ['am','pm'], wed: [], thu: ['am'], fri: [], sat: [], sun: [] } },
-        notes: [ { id: 1, text: '偏好周二上午拜访，前台需预约', image: null, date: '2026-08-05' } ] },
-      { id: 2, name: '李敏', title: '主治医师', phone: '139****0002', city: '上海市', district: '徐汇区', unit: '中山医院', address: '徐汇区枫林路180号', tags: [4],
-        schedule: { mode: 'weekly', week: { mon: ['pm'], tue: [], wed: ['pm'], thu: [], fri: [], sat: [], sun: [] } }, notes: [] },
-      { id: 3, name: '陈志强', title: '副主任医师', phone: '137****0003', city: '北京市', district: '海淀区', unit: '北大人民医院', address: '海淀区西直门南大街11号', tags: [1,5],
-        schedule: { mode: 'weekly', week: { mon: [], tue: [], wed: [], thu: [], fri: ['am'], sat: [], sun: [] } }, notes: [ { id: 2, text: '对新产品感兴趣，下次带资料', image: null, date: '2026-08-03' } ] },
-      { id: 4, name: '赵丽华', title: '主任医师', phone: '136****0004', city: '杭州市', district: '西湖区', unit: '浙大一院', address: '西湖区庆春路79号', tags: [3,6],
-        schedule: { mode: 'weekly', week: { mon: ['am','night'], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] } }, notes: [] }
-    ],
-    tags: [
-      { id: 1, name: '未拜访' },
-      { id: 2, name: '重点客户' },
-      { id: 3, name: '次重点客户' },
-      { id: 4, name: 'A级客户' },
-      { id: 5, name: 'B级客户' },
-      { id: 6, name: 'C级客户' },
-      { id: 7, name: 'D级客户' }
-    ],
-    visits: [
-      { id: 1, customerId: 1, date: '2026-08-12', slots: ['am'], done: false },
-      { id: 2, customerId: 2, date: '2026-08-13', slots: ['pm'], done: false }
-    ],
+    customers: [],
+    tags: [],
+    visits: [],
     cFilter: { kw: '', city: '', district: '', unit: '', tags: [] },
     cScreen: 'list',
     cSelId: null,
@@ -308,6 +290,7 @@
     if (state.calCenter === undefined) state.calCenter = dstr(0);
     if (state.calSelected === undefined) state.calSelected = dstr(0);
     if (state.calMonthOpen === undefined) state.calMonthOpen = false;
+    if (state.vScreen === undefined) state.vScreen = 'list';
     if (state.calViewYear === undefined) state.calViewYear = Number(dstr(0).slice(0, 4));
     if (state.calViewMonth === undefined) state.calViewMonth = Number(dstr(0).slice(5, 7)) - 1;
   } catch (e) { state = JSON.parse(JSON.stringify(seed)); }
@@ -437,8 +420,6 @@
         '<button class="btn-outline" style="padding:8px;font-size:13px;" onclick="APP.selectAll()">' + (allSelected ? '取消全选' : '全选') + '</button>' +
         '<button class="btn-danger" style="padding:8px;font-size:13px;" onclick="APP.batchDelete()">删除</button>' +
       '</div>';
-    } else {
-      h += tabbar();
     }
     return h;
   }
@@ -461,8 +442,6 @@
         '<button class="btn-outline" style="padding:8px;font-size:13px;" onclick="APP.selectAll()">' + (allSelected ? '取消全选' : '全选') + '</button>' +
         '<button class="btn-danger" style="padding:8px;font-size:13px;" onclick="APP.batchDelete()">删除</button>' +
       '</div>';
-    } else {
-      h += tabbar();
     }
     return h;
   }
@@ -510,7 +489,7 @@
     g.records.slice().sort(function (a, b) { return b.date < a.date ? -1 : 1; }).forEach(function (r) {
       h += '<div class="rec-row"><span>' + r.date + ' · +' + r.value + ' ' + g.unit + '</span><span class="rec-note">' + (r.note || '') + '</span></div>';
     });
-    h += '</div>' + tabbar();
+    h += '</div>';
     return h;
   }
 
@@ -653,14 +632,13 @@
     return h;
   }
   function screenCustomerList() {
-    var h = nav('客户管理', '', '<span class="primary" onclick="APP.newCustomer()">＋</span>');
+    var h = nav('客户管理', '', '<span class="primary" style="font-size:24px;font-weight:700;line-height:1;" onclick="APP.newCustomer()">＋</span>');
     h += '<div class="content">';
     h += '<div class="searchbar"><input id="c-kw" value="' + state.cFilter.kw + '" placeholder="搜索客户 / 拼音 / 地址" oninput="APP.setKw(this.value)"></div>';
     h += '<div class="toolbar">' +
-      '<button class="tool-btn' + (hasAddrFilter() ? ' on' : '') + '" onclick="APP.toggleFilterPanel()">地址</button>' +
-      '<button class="tool-btn' + (state.cFilter.tags.length ? ' on' : '') + '" onclick="APP.toggleFilterPanel()">标签</button>' +
+      '<button class="tool-btn' + (state.showFilter ? ' on' : '') + '" onclick="APP.toggleFilterPanel()">筛选</button>' +
+      '<button class="tool-btn' + (state.batchMode ? ' on' : '') + '" onclick="APP.toggleBatch()">批量</button>' +
       '<button class="tool-btn" onclick="APP.openTagManager()">标签管理</button>' +
-      '<button class="tool-btn" onclick="APP.enterBatch()">批量</button>' +
     '</div>';
     if (state.showFilter) h += filterPanel();
     if (state.batchMode) {
@@ -672,10 +650,9 @@
       h += '<div class="selbar">' +
         '<button class="btn-outline" style="padding:8px;font-size:12px;" onclick="APP.batchEditAddr()">改地址</button>' +
         '<button class="btn-outline" style="padding:8px;font-size:12px;" onclick="APP.batchEditSched()">改坐诊</button>' +
-        '<button class="btn-danger" style="padding:8px;font-size:12px;" onclick="APP.finishBatch()">完成</button>' +
+        '<button class="btn-danger" style="padding:8px;font-size:12px;" onclick="APP.batchDeleteCustomers()">删除</button>' +
+        '<button class="btn-outline" style="padding:8px;font-size:12px;" onclick="APP.finishBatch()">完成</button>' +
       '</div>';
-    } else {
-      h += tabbar();
     }
     return h;
   }
@@ -742,13 +719,13 @@
       h += '<div class="note-item"><div class="note-date">' + n.date + '</div>' + n.text + (n.image ? '<img src="' + n.image + '">' : '') + '</div>';
     });
     h += '<div style="margin-top:14px;"><button class="btn-danger" data-id="' + c.id + '" onclick="APP.confirmDeleteCustomer(this.dataset.id)">删除客户</button></div>';
-    h += '</div>' + tabbar();
+    h += '</div>';
     return h;
   }
 
   function tabPlaceholder(key, name) {
     var h = nav(name, '', '');
-    h += '<div class="content"><div class="tabpage"><div class="big">🚧</div><div>' + name + ' 版块将在后续制作</div></div></div>' + tabbar();
+    h += '<div class="content"><div class="tabpage"><div class="big">🚧</div><div>' + name + ' 版块将在后续制作</div></div></div>';
     return h;
   }
 
@@ -799,7 +776,7 @@
       h += monthlySlotChips();
     }
     h += '<div id="sched-preview" style="font-size:11px;color:#999;margin-top:14px;">当前设置：' + scheduleSummaryText({ schedule: s }) + '</div>';
-    h += '</div>' + tabbar();
+    h += '</div>';
     return h;
   }
 
@@ -808,6 +785,8 @@
     var editing = state.cEditId ? findCustomer(state.cEditId) : null;
     var f = editing ? { name: editing.name, title: editing.title, phone: editing.phone, city: editing.city, district: editing.district, unit: editing.unit, address: editing.address }
                     : { name: '', title: '', phone: '', city: '', district: '', unit: '', address: '' };
+    // 恢复进入工作时间前保存的输入
+    if (state._formDraft) { f = Object.assign({}, f, state._formDraft); }
     var fsSched = state._formSchedule ? state._formSchedule : (editing ? editing.schedule : null);
     var formSchedText = fsSched && fsSched.mode ? scheduleSummaryText({ schedule: fsSched }) : '未设置';
     var h = nav(editing ? '编辑客户' : '新增客户',
@@ -855,27 +834,27 @@
           '<span style="color:#333;cursor:pointer;" data-id="' + t.id + '" onclick="APP.deleteTag(this.dataset.id)">删</span>' +
         '</span></div>';
     });
-    h += '</div>' + tabbar();
+    h += '</div>';
     return h;
   }
 
   // ========== 拜访计划 ==========
   function findVisit(id) { return state.visits.find(function (v) { return String(v.id) === String(id); }); }
   function renderVisits() {
+    var pending = state.visits.filter(function (v) { return !v.done; });
     var h = nav('拜访计划', '', '');
     h += '<div class="content">';
-    if (state.visits.length === 0) h += '<div class="empty">暂无拜访计划<br><br>在「客户管理」里点客户右侧的 ＋ 添加</div>';
+    if (pending.length === 0) h += '<div class="empty">暂无未完成拜访<br><br>在「客户管理」里点客户右侧的 ＋ 添加</div>';
     var groups = {};
-    state.visits.forEach(function (v) { (groups[v.date] = groups[v.date] || []).push(v); });
+    pending.forEach(function (v) { (groups[v.date] = groups[v.date] || []).push(v); });
     Object.keys(groups).sort().forEach(function (ds) {
       var holi = holidayOf(ds);
       h += '<div class="visit-group-date">' + ds + (holi ? '（' + holi + '）' : '') + '</div>';
-      var items = groups[ds].slice().sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0); });
-      items.forEach(function (v) {
+      groups[ds].forEach(function (v) {
         var c = findCustomer(v.customerId);
         var slotsHtml = (v.slots || []).map(function (s) { return '<span class="slot-badge">' + slotName(s) + '</span>'; }).join('');
-        h += '<div class="visit-item' + (v.done ? ' done' : '') + '">' +
-          '<span class="done-check' + (v.done ? ' on' : '') + '" data-id="' + v.id + '" onclick="APP.toggleVisitDone(this.dataset.id)">' + (v.done ? '✓' : '') + '</span>' +
+        h += '<div class="visit-item">' +
+          '<span class="done-check" data-id="' + v.id + '" onclick="APP.toggleVisitDone(this.dataset.id)"></span>' +
           '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:#000;">' + (c ? c.name : '未知客户') + '</div>' +
           '<div style="font-size:11px;color:#888;">' + (c ? c.unit : '') + '</div></div>' +
           slotsHtml +
@@ -884,10 +863,35 @@
         '</div>';
       });
     });
-    h += '</div>' + tabbar();
+    h += '<div class="link-row" onclick="APP.openVisited()">✅ 已拜访（' + (state.visits.length - pending.length) + '）</div>';
+    h += '</div>';
     return h;
   }
-
+  function renderVisited() {
+    var done = state.visits.filter(function (v) { return v.done; });
+    var h = nav('已拜访', '<span onclick="APP.backVisited()">‹ 返回</span>', '');
+    h += '<div class="content">';
+    if (done.length === 0) h += '<div class="empty">暂无已拜访记录</div>';
+    var groups = {};
+    done.forEach(function (v) { (groups[v.date] = groups[v.date] || []).push(v); });
+    Object.keys(groups).sort().reverse().forEach(function (ds) {
+      h += '<div class="visit-group-date">' + ds + '</div>';
+      groups[ds].forEach(function (v) {
+        var c = findCustomer(v.customerId);
+        var slotsHtml = (v.slots || []).map(function (s) { return '<span class="slot-badge">' + slotName(s) + '</span>'; }).join('');
+        h += '<div class="visit-item done">' +
+          '<span class="done-check on">✓</span>' +
+          '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:#000;">' + (c ? c.name : '未知客户') + '</div>' +
+          '<div style="font-size:11px;color:#888;">' + (c ? c.unit : '') + '</div></div>' +
+          slotsHtml +
+          '<span style="color:#333;cursor:pointer;margin-left:6px;font-size:12px;" data-id="' + v.id + '" onclick="APP.restoreVisit(this.dataset.id)">恢复</span>' +
+          '<span style="color:#333;cursor:pointer;margin-left:6px;font-size:12px;" data-id="' + v.id + '" onclick="APP.deleteVisit(this.dataset.id)">删除</span>' +
+        '</div>';
+      });
+    });
+    h += '</div>';
+    return h;
+  }
   function calDayStr(offset) {
     var d = new Date(state.calCenter + 'T00:00:00');
     d.setDate(d.getDate() + offset);
@@ -969,7 +973,7 @@
         '<div style="display:flex;gap:4px;flex-shrink:0;">' + slots.map(function (s) { return '<span class="slot-badge">' + slotName(s) + '</span>'; }).join('') + '</div>' +
       '</div>';
     });
-    h += '</div>' + tabbar();
+    h += '</div>';
     return h;
   }
   function renderSettings() {
@@ -991,9 +995,9 @@
       '<input type="file" id="import-file" accept=".json,application/json" style="display:none;"></div>';
     h += '<div style="font-size:11px;color:#888;margin-bottom:14px;">数据保存在本机浏览器。建议定期导出备份，换设备或清缓存前先导出。</div>';
     h += '<div class="filter-title">重置</div>';
-    h += '<div class="field"><button class="btn-outline" onclick="APP.resetDemo()">恢复演示数据</button></div>';
+
     h += '<div class="field" style="margin-top:8px;"><button class="btn-danger" onclick="APP.clearAll()">清空全部数据</button></div>';
-    h += '</div>' + tabbar();
+    h += '</div>';
     return h;
   }
   function renderCustomer() {
@@ -1003,18 +1007,33 @@
     if (state.cScreen === 'tags') return screenTagManager();
     return screenCustomerList();
   }
+  function sidebar() {
+    var items = [
+      { key: 'calendar', ic: '📅', label: '日历' },
+      { key: 'goals', ic: '🎯', label: '目标计划' },
+      { key: 'customers', ic: '👥', label: '客户管理' },
+      { key: 'visits', ic: '📝', label: '拜访计划' },
+      { key: 'settings', ic: '⚙️', label: '设置' }
+    ];
+    var h = '<div class="sidebar">';
+    items.forEach(function (it) {
+      h += '<div class="side-item' + (state.tab === it.key ? ' active' : '') + '" data-key="' + it.key + '" onclick="APP.switchTab(this.dataset.key)">' +
+        '<span class="side-ic">' + it.ic + '</span><span class="side-label">' + it.label + '</span></div>';
+    });
+    return h + '</div>';
+  }
   function render() {
     autoArchive();
     var h;
     if (state.tab === 'calendar') h = renderCalendar();
     else if (state.tab === 'customers') h = renderCustomer();
-    else if (state.tab === 'visits') h = renderVisits();
+    else if (state.tab === 'visits') h = (state.vScreen === 'visited') ? renderVisited() : renderVisits();
     else if (state.tab === 'settings') h = renderSettings();
     else if (state.screen === 'list') h = screenList();
     else if (state.screen === 'archive') h = screenArchive();
     else if (state.screen === 'form') h = screenForm();
     else if (state.screen === 'detail') h = screenDetail();
-    phone.innerHTML = h;
+    phone.innerHTML = '<div class="layout">' + sidebar() + '<div class="main">' + h + '</div></div>';
   }
 
   var APP = {
@@ -1023,6 +1042,7 @@
       state.selectMode = false; state.selected = {};
       state.cScreen = 'list'; state.cSelId = null; state.cEditId = null;
       state.batchMode = false; state.cSelected = {}; state.showFilter = false;
+      state.vScreen = 'list';
       state._formTags = [];
       save(); render();
     },
@@ -1079,6 +1099,7 @@
       state.selectMode = false; state.selected = {};
       state.cScreen = 'list'; state.cSelId = null; state.cEditId = null; state._formTags = [];
       state.batchMode = false; state.cSelected = {}; state.showFilter = false;
+      state.vScreen = 'list';
       state.cFilter = { kw: '', city: '', district: '', unit: '', tags: [] };
       state._formSchedule = null; state._schedFrom = null;
     },
@@ -1265,8 +1286,8 @@
       save(); render();
     },
     openCustomer: function (id) { state.cScreen = 'detail'; state.cSelId = id; save(); render(); },
-    newCustomer: function () { state.cEditId = null; state._formTags = []; state.cScreen = 'form'; save(); render(); },
-    editCustomer: function (id) { state.cEditId = id; state._formTags = (findCustomer(id) || { tags: [] }).tags.slice(); state.cScreen = 'form'; save(); render(); },
+    newCustomer: function () { state.cEditId = null; state._formTags = []; state._formDraft = null; state.cScreen = 'form'; save(); render(); },
+    editCustomer: function (id) { state.cEditId = id; state._formTags = (findCustomer(id) || { tags: [] }).tags.slice(); state._formDraft = null; state.cScreen = 'form'; save(); render(); },
     toggleFormTag: function (id) {
       var nid = Number(id);
       var i = state._formTags.indexOf(nid);
@@ -1297,7 +1318,7 @@
         state.customers.push({ id: Date.now(), name: name, title: title, phone: phone, city: city,
           district: district, unit: unit, address: address, tags: state._formTags.slice(), schedule: sched || emptySchedule(), notes: [] });
       }
-      state.cEditId = null; state._formTags = []; state._formSchedule = null; state.cScreen = 'list'; save(); render();
+      state.cEditId = null; state._formTags = []; state._formSchedule = null; state._formDraft = null; state.cScreen = 'list'; save(); render();
     },
     confirmDeleteCustomer: function (id) {
       var c = findCustomer(id);
@@ -1316,7 +1337,11 @@
       if (list) { list.innerHTML = customerListHTML(); }
       else { render(); }
     },
-    toggleFilterPanel: function () { state.showFilter = !state.showFilter; save(); render(); },
+    toggleFilterPanel: function () {
+      state.showFilter = !state.showFilter;
+      state.batchMode = false;
+      save(); render();
+    },
     setCity: function (v) { state.cFilter.city = (state.cFilter.city === v ? '' : v); state.cFilter.district = ''; state.cFilter.unit = ''; save(); render(); },
     setDistrict: function (v) { state.cFilter.district = (state.cFilter.district === v ? '' : v); state.cFilter.unit = ''; save(); render(); },
     setUnit: function (v) { state.cFilter.unit = (state.cFilter.unit === v ? '' : v); save(); render(); },
@@ -1341,6 +1366,16 @@
     },
     openFormSchedule: function () {
       state._schedFrom = 'form';
+      // 保存当前表单输入，返回时恢复
+      state._formDraft = {
+        name: (document.getElementById('cf-name') || {}).value || '',
+        title: (document.getElementById('cf-title') || {}).value || '',
+        phone: (document.getElementById('cf-phone') || {}).value || '',
+        city: (document.getElementById('cf-city') || {}).value || '',
+        district: (document.getElementById('cf-district') || {}).value || '',
+        unit: (document.getElementById('cf-unit') || {}).value || '',
+        address: (document.getElementById('cf-address') || {}).value || ''
+      };
       var base = null;
       if (state.cEditId) { var ec = findCustomer(state.cEditId); if (ec) base = ec.schedule; }
       state._formSchedule = state._formSchedule || JSON.parse(JSON.stringify(base && base.mode ? base : emptySchedule()));
@@ -1584,12 +1619,36 @@
       var v = findVisit(id);
       if (v) { v.done = !v.done; save(); render(); }
     },
+    openVisited: function () { state.vScreen = 'visited'; save(); render(); },
+    backVisited: function () { state.vScreen = 'list'; save(); render(); },
+    restoreVisit: function (id) {
+      var v = findVisit(id);
+      if (v) { v.done = false; save(); render(); }
+    },
     deleteVisit: function (id) {
       state.visits = state.visits.filter(function (v) { return String(v.id) !== String(id); });
       save(); render();
     },
     // ===== 客户管理：批量编辑 =====
-    enterBatch: function () { state.batchMode = true; state.cSelected = {}; save(); render(); },
+    enterBatch: function () {
+      state.batchMode = true; state.cSelected = {}; state.showFilter = false;
+      save(); render();
+    },
+    toggleBatch: function () {
+      if (state.batchMode) { state.batchMode = false; state.cSelected = {}; }
+      else { state.batchMode = true; state.cSelected = {}; state.showFilter = false; }
+      save(); render();
+    },
+    batchDeleteCustomers: function () {
+      var keys = Object.keys(state.cSelected);
+      if (!keys.length) { alert('请先选择客户'); return; }
+      if (window.confirm('确定删除选中的 ' + keys.length + ' 位客户吗？其拜访计划也会一并删除。')) {
+        state.customers = state.customers.filter(function (c) { return !state.cSelected[String(c.id)]; });
+        state.visits = state.visits.filter(function (v) { return !state.cSelected[String(v.customerId)]; });
+        state.batchMode = false; state.cSelected = {};
+        save(); render();
+      }
+    },
     finishBatch: function () { state.batchMode = false; state.cSelected = {}; save(); render(); },
     toggleCustomerSel: function (id) {
       var key = String(id);
@@ -1713,7 +1772,6 @@
 })();
 </script>
 <script>
-  // PWA 全屏检测（standalone 模式填满屏幕）
   document.addEventListener('DOMContentLoaded', function () {
     var isStandalone = false;
     try {
@@ -1722,7 +1780,6 @@
     } catch (e) {}
     if (isStandalone) document.body.classList.add('standalone');
   });
-  // 注册 Service Worker（离线缓存）
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('./sw.js').catch(function () {});
