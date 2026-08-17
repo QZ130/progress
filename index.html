@@ -74,7 +74,7 @@
   .field label { display: block; font-size: 12px; font-weight: 700; color: #333; margin-bottom: 5px; }
   .input {
     width: 100%; border: 1px solid #000; border-radius: 6px; padding: 10px;
-    font-size: 14px; color: #000; background: #fff; font-family: inherit;
+    font-size: 16px; color: #000; background: #fff; font-family: inherit;
   }
   .input::placeholder { color: #bbb; }
   .input:focus { outline: none; border-width: 2px; }
@@ -529,7 +529,12 @@
   }
   // ========== 全国行政区划（省-市-区县） ==========
   var REGION_DATA = {"北京市":{"北京市":["东城区","西城区","朝阳区","海淀区","丰台区","石景山区","通州区","顺义区","房山区","大兴区","昌平区","怀柔区","平谷区","密云区","延庆区","门头沟区"]},"天津市":{"天津市":["和平区","河东区","河西区","南开区","河北区","红桥区","滨海新区","东丽区","西青区","津南区","北辰区","武清区","宝坻区","静海区","宁河区","蓟州区"]},"上海市":{"上海市":["黄浦区","徐汇区","长宁区","静安区","普陀区","虹口区","杨浦区","闵行区","宝山区","嘉定区","浦东新区","金山区","松江区","青浦区","奉贤区","崇明区"]},"重庆市":{"重庆市":["渝中区","江北区","南岸区","九龙坡区","沙坪坝区","大渡口区","渝北区","巴南区","北碚区","涪陵区","万州区","永川区","合川区","江津区","綦江区","长寿区"]},"河北省":{"石家庄市":["长安区","桥西区","新华区","裕华区"],"唐山市":["路南区","路北区","丰润区","丰南区"],"秦皇岛市":["海港区","山海关区","北戴河区"],"邯郸市":["丛台区","邯山区","复兴区"],"邢台市":["襄都区","信都区"],"保定市":["竞秀区","莲池区"],"张家口市":["桥东区","桥西区"],"承德市":["双桥区","双滦区"],"沧州市":["运河区","新华区"],"廊坊市":["广阳区","安次区"],"衡水市":["桃城区","冀州区"]},"山西省":{"太原市":["小店区","迎泽区","杏花岭区","万柏林区"],"大同市":["平城区","云冈区"],"阳泉市":["城区","矿区","郊区"],"长治市":["潞州区","上党区"],"晋城市":["城区","泽州县"],"朔州市":["朔城区","平鲁区"],"晋中市":["榆次区"],"运城市":["盐湖区"],"忻州市":["忻府区"],"临汾市":["尧都区"],"吕梁市":["离石区"]},"内蒙古自治区":{"呼和浩特市":["新城区","回民区","玉泉区","赛罕区"],"包头市":["昆都仑区","青山区","东河区"],"乌海市":["海勃湾区","海南区","乌达区"],"赤峰市":["红山区","松山区"],"通辽市":["科尔沁区"],"鄂尔多斯市":["东胜区","康巴什区"],"呼伦贝尔市":["海拉尔区"],"巴彦淖尔市":["临河区"],"乌兰察布市":["集宁区"],"兴安盟":["乌兰浩特市"],"锡林郭勒盟":["锡林浩特市"],"阿拉善盟":["阿拉善左旗"]},"辽宁省":{"沈阳市":["和平区","沈河区","大东区","皇姑区","铁西区","浑南区"],"大连市":["中山区","西岗区","沙河口区","甘井子区","金州区"],"鞍山市":["铁东区","铁西区","立山区"],"抚顺市":["新抚区","顺城区"],"本溪市":["平山区","明山区"],"丹东市":["振兴区","元宝区"],"锦州市":["古塔区","凌河区"],"营口市":["站前区","西市区"],"阜新市":["海州区"],"辽阳市":["白塔区"],"盘锦市":["兴隆台区","双台子区"],"铁岭市":["银州区"],"朝阳市":["双塔区"],"葫芦岛市":["龙港区","连山区"]},"吉林省":{"长春市":["南关区","宽城区","朝阳区","二道区","绿园区"],"吉林市":["昌邑区","船营区","龙潭区","丰满区"],"四平市":["铁西区","铁东区"],"辽源市":["龙山区","西安区"],"通化市":["东昌区","二道江区"],"白山市":["浑江区"],"松原市":["宁江区"],"白城市":["洮北区"],"延边朝鲜族自治州":["延吉市"]},"黑龙江省":{"哈尔滨市":["道里区","南岗区","道外区","香坊区","平房区","松北区"],"齐齐哈尔市":["龙沙区","建华区","铁锋区"],"鸡西市":["鸡冠区"],"鹤岗市":["向阳区"],"双鸭山市":["尖山区"],"大庆市":["萨尔图区","龙凤区","让胡路区"],"伊春市":["伊美区"],"佳木斯市":["前进区","向阳区"],"七台河市":["桃山区"],"牡丹江市":["东安区","西安区"],"黑河市":["爱辉区"],"绥化市":["北林区"],"大兴安岭地区":["加格达奇区"]},"江苏省":{"南京市":["玄武区","秦淮区","建邺区","鼓楼区","栖霞区","雨花台区","江宁区"],"无锡市":["梁溪区","锡山区","惠山区","滨湖区","新吴区"],"徐州市":["鼓楼区","云龙区","贾汪区","泉山区","铜山区"],"常州市":["天宁区","钟楼区","新北区","武进区"],"苏州市":["姑苏区","虎丘区","吴中区","相城区","吴江区","工业园区"],"南通市":["崇川区","通州区"],"连云港市":["海州区","连云区"],"淮安市":["清江浦区","淮安区"],"盐城市":["亭湖区","盐都区"],"扬州市":["广陵区","邗江区","江都区"],"镇江市":["京口区","润州区"],"泰州市":["海陵区","高港区"],"宿迁市":["宿城区","宿豫区"]},"浙江省":{"杭州市":["上城区","拱墅区","西湖区","滨江区","萧山区","余杭区","临平区","钱塘区"],"宁波市":["海曙区","江北区","北仑区","镇海区","鄞州区"],"温州市":["鹿城区","龙湾区","瓯海区"],"嘉兴市":["南湖区","秀洲区"],"湖州市":["吴兴区","南浔区"],"绍兴市":["越城区","柯桥区","上虞区"],"金华市":["婺城区","金东区"],"衢州市":["柯城区","衢江区"],"舟山市":["定海区","普陀区"],"台州市":["椒江区","黄岩区","路桥区"],"丽水市":["莲都区"]},"安徽省":{"合肥市":["瑶海区","庐阳区","蜀山区","包河区"],"芜湖市":["镜湖区","弋江区","鸠江区"],"蚌埠市":["龙子湖区","蚌山区","禹会区"],"淮南市":["田家庵区","大通区"],"马鞍山市":["花山区","雨山区"],"淮北市":["相山区","杜集区"],"铜陵市":["铜官区","义安区"],"安庆市":["迎江区","大观区","宜秀区"],"黄山市":["屯溪区","黄山区","徽州区"],"滁州市":["琅琊区","南谯区"],"阜阳市":["颍州区","颍东区","颍泉区"],"宿州市":["埇桥区"],"六安市":["金安区","裕安区"],"亳州市":["谯城区"],"池州市":["贵池区"],"宣城市":["宣州区"]},"福建省":{"福州市":["鼓楼区","台江区","仓山区","马尾区","晋安区","长乐区","闽侯县","连江县","罗源县","闽清县","永泰县","福清市"],"厦门市":["思明区","湖里区","集美区","海沧区","同安区","翔安区"],"莆田市":["城厢区","涵江区","荔城区","秀屿区","仙游县"],"三明市":["三元区","沙县区","明溪县","清流县","宁化县","大田县","尤溪县","将乐县","泰宁县","建宁县","永安市"],"泉州市":["鲤城区","丰泽区","洛江区","泉港区","石狮市","晋江市","南安市","惠安县","安溪县","永春县","德化县"],"漳州市":["芗城区","龙文区","龙海区","长泰区","云霄县","漳浦县","诏安县","东山县","南靖县","平和县","华安县"],"南平市":["延平区","建阳区","邵武市","武夷山市","建瓯市","顺昌县","浦城县","光泽县","松溪县","政和县"],"龙岩市":["新罗区","永定区","长汀县","上杭县","武平县","连城县","漳平市"],"宁德市":["蕉城区","福安市","福鼎市","霞浦县","古田县","屏南县","寿宁县","周宁县","柘荣县"]},"江西省":{"南昌市":["东湖区","西湖区","青云谱区","青山湖区","红谷滩区"],"景德镇市":["昌江区","珠山区"],"萍乡市":["安源区","湘东区"],"九江市":["浔阳区","濂溪区","柴桑区"],"新余市":["渝水区"],"鹰潭市":["月湖区","余江区"],"赣州市":["章贡区","南康区","赣县区"],"吉安市":["吉州区","青原区"],"宜春市":["袁州区"],"抚州市":["临川区","东乡区"],"上饶市":["信州区","广丰区","广信区"]},"山东省":{"济南市":["历下区","市中区","槐荫区","天桥区","历城区","长清区"],"青岛市":["市南区","市北区","黄岛区","崂山区","李沧区","城阳区","即墨区"],"淄博市":["张店区","淄川区","博山区","临淄区"],"枣庄市":["市中区","薛城区","滕州市"],"东营市":["东营区","河口区"],"烟台市":["芝罘区","福山区","莱山区","牟平区","蓬莱区"],"潍坊市":["潍城区","寒亭区","坊子区","奎文区"],"济宁市":["任城区","兖州区"],"泰安市":["泰山区","岱岳区"],"威海市":["环翠区","文登区"],"日照市":["东港区","岚山区"],"临沂市":["兰山区","罗庄区","河东区"],"德州市":["德城区","陵城区"],"聊城市":["东昌府区","茌平区"],"滨州市":["滨城区","沾化区"],"菏泽市":["牡丹区","定陶区"]},"河南省":{"郑州市":["中原区","二七区","管城回族区","金水区","惠济区","郑东新区"],"开封市":["龙亭区","顺河回族区","鼓楼区","禹王台区","祥符区"],"洛阳市":["老城区","西工区","涧西区","洛龙区"],"平顶山市":["新华区","卫东区","湛河区"],"安阳市":["文峰区","北关区","殷都区"],"鹤壁市":["淇滨区","山城区"],"新乡市":["红旗区","卫滨区","牧野区"],"焦作市":["解放区","山阳区"],"濮阳市":["华龙区"],"许昌市":["魏都区","建安区"],"漯河市":["源汇区","郾城区"],"三门峡市":["湖滨区"],"南阳市":["宛城区","卧龙区"],"商丘市":["梁园区","睢阳区"],"信阳市":["浉河区","平桥区"],"周口市":["川汇区","淮阳区"],"驻马店市":["驿城区"],"济源市":["济源市"]},"湖北省":{"武汉市":["江岸区","江汉区","硚口区","汉阳区","武昌区","青山区","洪山区","东西湖区","江夏区","黄陂区"],"黄石市":["黄石港区","西塞山区","下陆区","铁山区"],"十堰市":["茅箭区","张湾区"],"宜昌市":["西陵区","伍家岗区","点军区","猇亭区"],"襄阳市":["襄城区","樊城区","襄州区"],"鄂州市":["鄂城区","华容区","梁子湖区"],"荆门市":["东宝区","掇刀区"],"孝感市":["孝南区"],"荆州市":["沙市区","荆州区"],"黄冈市":["黄州区","麻城市"],"咸宁市":["咸安区"],"随州市":["曾都区"],"恩施土家族苗族自治州":["恩施市"],"仙桃市":["仙桃市"],"潜江市":["潜江市"],"天门市":["天门市"],"神农架林区":["神农架林区"]},"湖南省":{"长沙市":["芙蓉区","天心区","岳麓区","开福区","雨花区","望城区"],"株洲市":["荷塘区","芦淞区","石峰区","天元区"],"湘潭市":["雨湖区","岳塘区"],"衡阳市":["珠晖区","雁峰区","石鼓区","蒸湘区"],"邵阳市":["双清区","大祥区","北塔区"],"岳阳市":["岳阳楼区","云溪区","君山区"],"常德市":["武陵区","鼎城区"],"张家界市":["永定区","武陵源区"],"益阳市":["资阳区","赫山区"],"郴州市":["北湖区","苏仙区"],"永州市":["冷水滩区","零陵区"],"怀化市":["鹤城区"],"娄底市":["娄星区"],"湘西土家族苗族自治州":["吉首市"]},"广东省":{"广州市":["荔湾区","越秀区","海珠区","天河区","白云区","黄埔区","番禺区","花都区","南沙区","增城区","从化区"],"韶关市":["武江区","浈江区","曲江区"],"深圳市":["罗湖区","福田区","南山区","宝安区","龙岗区","盐田区","龙华区","坪山区","光明区"],"珠海市":["香洲区","斗门区","金湾区"],"汕头市":["龙湖区","金平区","濠江区","潮阳区","潮南区"],"佛山市":["禅城区","南海区","顺德区","三水区","高明区"],"江门市":["蓬江区","江海区","新会区"],"湛江市":["赤坎区","霞山区","坡头区","麻章区"],"茂名市":["茂南区","电白区"],"肇庆市":["端州区","鼎湖区","高要区"],"惠州市":["惠城区","惠阳区","惠东县"],"梅州市":["梅江区","梅县区"],"汕尾市":["城区","海丰县"],"河源市":["源城区"],"阳江市":["江城区","阳东区"],"清远市":["清城区","清新区"],"东莞市":["东莞市"],"中山市":["中山市"],"潮州市":["湘桥区","潮安区"],"揭阳市":["榕城区","揭东区"],"云浮市":["云城区","云安区"]},"广西壮族自治区":{"南宁市":["青秀区","兴宁区","江南区","西乡塘区","良庆区","邕宁区"],"柳州市":["城中区","鱼峰区","柳南区","柳北区"],"桂林市":["秀峰区","叠彩区","象山区","七星区","雁山区","临桂区"],"梧州市":["万秀区","长洲区","龙圩区"],"北海市":["海城区","银海区","铁山港区"],"防城港市":["港口区","防城区"],"钦州市":["钦南区","钦北区"],"贵港市":["港北区","港南区","覃塘区"],"玉林市":["玉州区","福绵区"],"百色市":["右江区"],"贺州市":["八步区","平桂区"],"河池市":["金城江区","宜州区"],"来宾市":["兴宾区"],"崇左市":["江州区"]},"海南省":{"海口市":["秀英区","龙华区","琼山区","美兰区"],"三亚市":["吉阳区","天涯区","崖州区","海棠区"],"三沙市":["西沙区","南沙区"],"儋州市":["儋州市"],"五指山市":["五指山市"],"琼海市":["琼海市"],"文昌市":["文昌市"],"万宁市":["万宁市"],"东方市":["东方市"]},"四川省":{"成都市":["锦江区","青羊区","金牛区","武侯区","成华区","龙泉驿区","青白江区","新都区","温江区","双流区","郫都区"],"自贡市":["自流井区","贡井区","大安区","沿滩区"],"攀枝花市":["东区","西区","仁和区"],"泸州市":["江阳区","纳溪区","龙马潭区"],"德阳市":["旌阳区","罗江区"],"绵阳市":["涪城区","游仙区","安州区"],"广元市":["利州区","昭化区","朝天区"],"遂宁市":["船山区","安居区"],"内江市":["市中区","东兴区"],"乐山市":["市中区","五通桥区","沙湾区","金口河区"],"南充市":["顺庆区","高坪区","嘉陵区"],"眉山市":["东坡区","彭山区"],"宜宾市":["翠屏区","南溪区","叙州区"],"广安市":["广安区","前锋区"],"达州市":["通川区","达川区"],"雅安市":["雨城区","名山区"],"巴中市":["巴州区","恩阳区"],"资阳市":["雁江区"],"阿坝藏族羌族自治州":["马尔康市"],"甘孜藏族自治州":["康定市"],"凉山彝族自治州":["西昌市"]},"贵州省":{"贵阳市":["南明区","云岩区","花溪区","乌当区","白云区","观山湖区"],"六盘水市":["钟山区","水城区"],"遵义市":["红花岗区","汇川区","播州区"],"安顺市":["西秀区","平坝区"],"毕节市":["七星关区","大方县"],"铜仁市":["碧江区","万山区"],"黔西南布依族苗族自治州":["兴义市"],"黔东南苗族侗族自治州":["凯里市"],"黔南布依族苗族自治州":["都匀市"]},"云南省":{"昆明市":["五华区","盘龙区","官渡区","西山区","呈贡区"],"曲靖市":["麒麟区","沾益区","马龙区"],"玉溪市":["红塔区","江川区"],"保山市":["隆阳区"],"昭通市":["昭阳区"],"丽江市":["古城区","玉龙纳西族自治县"],"普洱市":["思茅区"],"临沧市":["临翔区"],"楚雄彝族自治州":["楚雄市"],"红河哈尼族彝族自治州":["蒙自市"],"文山壮族苗族自治州":["文山市"],"西双版纳傣族自治州":["景洪市"],"大理白族自治州":["大理市"],"德宏傣族景颇族自治州":["芒市"],"怒江傈僳族自治州":["泸水市"],"迪庆藏族自治州":["香格里拉市"]},"西藏自治区":{"拉萨市":["城关区","堆龙德庆区"],"日喀则市":["桑珠孜区"],"昌都市":["卡若区"],"林芝市":["巴宜区"],"山南市":["乃东区"],"那曲市":["色尼区"],"阿里地区":["噶尔县"]},"陕西省":{"西安市":["新城区","碑林区","莲湖区","灞桥区","未央区","雁塔区","阎良区","临潼区","长安区","高陵区","鄠邑区"],"铜川市":["王益区","印台区","耀州区"],"宝鸡市":["渭滨区","金台区","陈仓区"],"咸阳市":["秦都区","渭城区","杨陵区"],"渭南市":["临渭区","华州区"],"延安市":["宝塔区","安塞区"],"汉中市":["汉台区","南郑区"],"榆林市":["榆阳区","横山区"],"安康市":["汉滨区"],"商洛市":["商州区"]},"甘肃省":{"兰州市":["城关区","七里河区","西固区","安宁区","红古区"],"嘉峪关市":["嘉峪关市"],"金昌市":["金川区","永昌县"],"白银市":["白银区","平川区"],"天水市":["秦州区","麦积区"],"武威市":["凉州区"],"张掖市":["甘州区"],"平凉市":["崆峒区"],"酒泉市":["肃州区"],"庆阳市":["西峰区"],"定西市":["安定区"],"陇南市":["武都区"],"临夏回族自治州":["临夏市"],"甘南藏族自治州":["合作市"]},"青海省":{"西宁市":["城东区","城中区","城西区","城北区"],"海东市":["乐都区","平安区"],"海北藏族自治州":["海晏县"],"黄南藏族自治州":["同仁市"],"海南藏族自治州":["共和县"],"果洛藏族自治州":["玛沁县"],"玉树藏族自治州":["玉树市"],"海西蒙古族藏族自治州":["德令哈市","格尔木市"]},"宁夏回族自治区":{"银川市":["兴庆区","西夏区","金凤区","永宁县","贺兰县"],"石嘴山市":["大武口区","惠农区"],"吴忠市":["利通区","红寺堡区"],"固原市":["原州区"],"中卫市":["沙坡头区","中宁县"]},"新疆维吾尔自治区":{"乌鲁木齐市":["天山区","沙依巴克区","新市区","水磨沟区","头屯河区","米东区"],"克拉玛依市":["独山子区","克拉玛依区","白碱滩区","乌尔禾区"],"吐鲁番市":["高昌区"],"哈密市":["伊州区"],"昌吉回族自治州":["昌吉市"],"博尔塔拉蒙古自治州":["博乐市"],"巴音郭楞蒙古自治州":["库尔勒市"],"阿克苏地区":["阿克苏市"],"克孜勒苏柯尔克孜自治州":["阿图什市"],"喀什地区":["喀什市"],"和田地区":["和田市"],"伊犁哈萨克自治州":["伊宁市"],"塔城地区":["塔城市"],"阿勒泰地区":["阿勒泰市"]},"台湾省":{"台北市":["台北市"],"高雄市":["高雄市"],"台中市":["台中市"],"台南市":["台南市"],"新北市":["新北市"],"基隆市":["基隆市"],"新竹市":["新竹市"],"嘉义市":["嘉义市"],"桃园市":["桃园市"]},"香港特别行政区":{"香港岛":["中西区","湾仔区","东区","南区"],"九龙":["油尖旺区","深水埗区","九龙城区","黄大仙区","观塘区"],"新界":["荃湾区","屯门区","元朗区","北区","大埔区","西贡区","沙田区","葵青区","离岛区"]},"澳门特别行政区":{"澳门半岛":["花地玛堂区","圣安多尼堂区","大堂区","望德堂区","风顺堂区"],"氹仔":["氹仔"],"路环":["路环"]}};
-  function regionProvinces() { return Object.keys(REGION_DATA); }
+  function regionProvinces() {
+    var keys = Object.keys(REGION_DATA);
+    var first = ['福建省', '湖北省', '江西省', '云南省'];
+    var rest = keys.filter(function (k) { return first.indexOf(k) < 0; });
+    return first.filter(function (k) { return keys.indexOf(k) >= 0; }).concat(rest);
+  }
   function regionCities(prov) { return REGION_DATA[prov] ? Object.keys(REGION_DATA[prov]) : []; }
   function regionDistricts(prov, city) { return (REGION_DATA[prov] && REGION_DATA[prov][city]) ? REGION_DATA[prov][city] : []; }
 
@@ -710,6 +715,18 @@
     }
     return '暂未设置工作时间';
   }
+  function customerSlotsOnDate(c, ds) {
+    var wps = (c.workplaces && c.workplaces.length) ? c.workplaces : [];
+    var all = [];
+    if (wps.length) {
+      wps.forEach(function (wp) {
+        scheduleSlotsOnDate(wp.schedule, ds).forEach(function (s) { if (all.indexOf(s) < 0) all.push(s); });
+      });
+    } else if (c.schedule) {
+      all = customerSlotsOnDate(c, ds);
+    }
+    return all;
+  }
   function scheduleHasDate(s, ds) {
     return scheduleSlotsOnDate(s, ds).length > 0;
   }
@@ -747,9 +764,15 @@
         h += '<div class="rec-row"><span>' + (l.name || '') + '</span><span>' + (l.address || '') + '</span></div>';
       });
     }
-    h += '<div class="filter-title">坐诊 / 上班时间</div>';
-    h += '<button class="btn-outline" style="padding:9px;font-size:13px;margin-bottom:8px;" data-id="' + c.id + '" onclick="APP.openSchedule(this.dataset.id)">编辑坐诊时间</button>';
-    h += scheduleSummary(c);
+    h += '<div class="filter-title">工作单位与工作时间</div>';
+    var wps = (c.workplaces && c.workplaces.length) ? c.workplaces : (c.unit ? [{ unit: c.unit, department: c.department, schedule: c.schedule }] : []);
+    if (wps.length) {
+      wps.forEach(function (wp) {
+        h += '<div class="rec-row"><span>' + (wp.unit || '') + (wp.department ? ' · ' + wp.department : '') + '</span><span>' + scheduleSummaryText({ schedule: wp.schedule }) + '</span></div>';
+      });
+    } else {
+      h += '<div class="empty" style="padding:10px 0;">暂未设置工作单位</div>';
+    }
     h += '<div class="filter-title" style="margin-top:14px;">备注</div>';
     h += '<button class="btn-outline" style="padding:9px;font-size:13px;margin-bottom:8px;" data-id="' + c.id + '" onclick="APP.addNote(this.dataset.id)">＋ 添加备注（可插图）</button>';
     if (c.notes.length === 0) h += '<div class="empty" style="padding:16px 0;">暂无备注</div>';
@@ -846,7 +869,7 @@
   function screenCustomerForm() {
     var editing = state.cEditId ? findCustomer(state.cEditId) : null;
     var f = editing ? { name: editing.name, title: editing.title, phone: editing.phone, province: editing.province || '', city: editing.city, district: editing.district, unit: editing.unit, department: editing.department || '', address: editing.address }
-                    : { name: '', title: '', phone: '', province: '', city: '', district: '', unit: '', department: '', address: '' };
+                    : { name: '', title: '', phone: '', province: '福建省', city: '福州市', district: '', unit: '', department: '', address: '' };
     // 恢复进入工作时间前保存的输入
     if (state._formDraft) { f = Object.assign({}, f, state._formDraft); }
     var provList = regionProvinces();
@@ -861,19 +884,33 @@
       '<span onclick="APP.backCustomer()">取消</span>',
       '<span class="primary" onclick="APP.saveCustomer()">保存</span>');
     h += '<div class="content">' +
-      '<div class="field"><label>姓名</label><input class="input" id="cf-name" value="' + f.name + '" placeholder="如：王建国"></div>' +
-      '<div class="field"><label>职称（选填）</label><input class="input" id="cf-title" value="' + f.title + '" placeholder="如：主任医师"></div>' +
-      '<div class="field"><label>电话（选填）</label><input class="input" id="cf-phone" value="' + f.phone + '" placeholder="选填"></div>' +
+      '<div class="field"><label>姓名</label><input class="input" id="cf-name" value="' + f.name + '" placeholder="如：王建国" oninput="APP.formDraft(\'name\', this.value);APP.nameSuggest(this.value)"></div>' +
+      '<div id="name-suggest"></div>' +
+      '<div class="field"><label>职称（选填）</label><input class="input" id="cf-title" value="' + f.title + '" placeholder="如：主任医师" oninput="APP.formDraft(\'title\', this.value)"></div>' +
+      '<div class="field"><label>电话（选填）</label><input class="input" id="cf-phone" value="' + f.phone + '" placeholder="选填" oninput="APP.formDraft(\'phone\', this.value)"></div>' +
       '<div class="field"><label>省份</label><select class="input" id="cf-province" onchange="APP.regionProvinceChange(this.value)">' + provOptions + '</select></div>' +
       '<div class="field"><label>城市</label><select class="input" id="cf-city" onchange="APP.regionCityChange(this.value)">' + cityOptions + '</select></div>' +
-      '<div class="field"><label>地区</label><select class="input" id="cf-district">' + distOptions + '</select></div>' +
-      '<div class="field"><label>工作单位（选填）</label><input class="input" id="cf-unit" value="' + f.unit + '" placeholder="如：仁济医院"></div>' +
-      '<div class="field"><label>科室（选填）</label><input class="input" id="cf-department" value="' + (f.department || '') + '" placeholder="如：心内科"></div>' +
-      '<div class="field"><label>详细地址（选填）</label><input class="input" id="cf-address" value="' + f.address + '" placeholder="如：浦东新区浦建路160号"></div>';
-    h += '<div class="field"><label>工作时间（选填）</label>' +
-      '<button class="btn-outline" style="padding:9px;font-size:13px;margin-bottom:6px;" onclick="APP.openFormSchedule()">⏰ 设置工作时间</button>' +
-      '<div class="coord-tip">' + formSchedText + '</div>' +
-    '</div>';
+      '<div class="field"><label>地区</label><select class="input" id="cf-district" onchange="APP.regionDistrictChange(this.value)">' + distOptions + '</select></div>' +
+      '<div class="field"><label>详细地址（选填）</label><input class="input" id="cf-address" value="' + f.address + '" placeholder="如：浦东新区浦建路160号" oninput="APP.formDraft(\'address\', this.value)"></div>';
+    h += '<div class="filter-title" style="margin-top:10px;">工作单位（选填，可多个）</div>';
+    state._formWorkplaces.forEach(function (wp, wi) {
+      h += '<div class="filter-panel" style="padding:10px;margin-bottom:8px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+          '<span style="font-weight:700;font-size:13px;">单位 ' + (wi + 1) + '</span>' +
+          (state._formWorkplaces.length > 1 ? '<span style="color:#333;cursor:pointer;font-size:12px;" onclick="APP.removeWorkplace(' + wi + ')">删除</span>' : '') +
+        '</div>' +
+        '<div class="field"><label>工作单位</label><input class="input" id="fw-unit-' + wi + '" value="' + (wp.unit || '') + '" placeholder="如：仁济医院" oninput="APP.workplaceInput(' + wi + ', \'unit\', this.value)"></div>' +
+        '<div class="field"><label>科室</label><input class="input" id="fw-dept-' + wi + '" value="' + (wp.department || '') + '" placeholder="如：心内科" oninput="APP.workplaceInput(' + wi + ', \'department\', this.value)"></div>' +
+        '<div class="field"><label>工作时间</label>' +
+          '<button class="btn-outline" style="padding:8px;font-size:12px;" onclick="APP.formWtOpen(' + wi + ')">设置工作时间</button>' +
+          '<div class="coord-tip">' + scheduleSummaryText({ schedule: wp.schedule }) + '</div>' +
+        '</div>' +
+      '</div>';
+    });
+    h += '<div class="btn-dashed" onclick="APP.addWorkplace()">＋ 添加工作单位</div>';
+    h += '<div class="filter-title" style="margin-top:12px;">备注（选填）</div>';
+    h += '<textarea class="input" id="cf-note" rows="2" placeholder="写点什么..." oninput="APP.formDraft(\'note\', this.value)">' + (f.note || '') + '</textarea>';
+
     h += '<div class="field"><label>标签</label><div class="chips" id="form-tag-chips">' + formTagChipsHTML() + '</div></div>';
     h += '<div class="err" id="cf-err"></div>' +
       '<button class="btn-primary" onclick="APP.saveCustomer()">保存</button>' +
@@ -983,7 +1020,7 @@
       var isToday = ds === dstr(0);
       var isSel = ds === state.calSelected;
       var holi = holidayOf(ds);
-      var hasSlot = state.customers.some(function (c) { return scheduleSlotsOnDate(c.schedule, ds).length > 0; });
+      var hasSlot = state.customers.some(function (c) { return customerSlotsOnDate(c, ds).length > 0; });
       h += '<div class="cal-day' + (isSel ? ' selected' : '') + '" data-ds="' + ds + '" onclick="APP.calPickDate(this.dataset.ds)"' + (isToday ? ' style="border:2px solid #000;"' : '') + '>' +
         '<div class="d">' + d + '</div>' +
         (holi ? '<div class="holi">' + holi + '</div>' : '') +
@@ -1006,7 +1043,7 @@
       var isToday = ds === dstr(0);
       var isSel = ds === state.calSelected;
       var holi = holidayOf(ds);
-      var slotCnt = state.customers.filter(function (c) { return scheduleSlotsOnDate(c.schedule, ds).length > 0; }).length;
+      var slotCnt = state.customers.filter(function (c) { return customerSlotsOnDate(c, ds).length > 0; }).length;
       h += '<div class="cal-cell' + (isToday ? ' today' : '') + (isSel ? ' sel' : '') + '" data-ds="' + ds + '" onclick="APP.calSelect(this.dataset.ds)">' +
         '<div class="cc-week">' + calWeekdayName(ds) + '</div>' +
         '<div class="cc-day">' + Number(ds.slice(8, 10)) + '</div>' +
@@ -1026,11 +1063,11 @@
         '</div>' + monthGridHTML(state.calViewYear, state.calViewMonth) +
       '</div>';
     }
-    var list = state.customers.filter(function (c) { return scheduleSlotsOnDate(c.schedule, state.calSelected).length > 0; });
+    var list = state.customers.filter(function (c) { return customerSlotsOnDate(c, state.calSelected).length > 0; });
     h += '<div class="group-label">当天坐诊 / 上班客户（' + list.length + '）</div>';
     if (list.length === 0) h += '<div class="empty">当天没有客户坐诊上班</div>';
     list.forEach(function (c) {
-      var slots = scheduleSlotsOnDate(c.schedule, state.calSelected);
+      var slots = customerSlotsOnDate(c, state.calSelected);
       h += '<div class="cust-row" data-id="' + c.id + '" onclick="APP.openCustomer(this.dataset.id)">' +
         '<div class="cust-main">' +
           '<div class="cust-name">' + c.name + '<span class="cust-title">' + (c.title || '') + '</span></div>' +
@@ -1405,8 +1442,8 @@
       save(); render();
     },
     openCustomer: function (id) { state.cScreen = 'detail'; state.cSelId = id; save(); render(); },
-    newCustomer: function () { state.cEditId = null; state._formTags = []; state._formDraft = null; state.cScreen = 'form'; save(); render(); },
-    editCustomer: function (id) { state.cEditId = id; state._formTags = (findCustomer(id) || { tags: [] }).tags.slice(); state._formDraft = null; state.cScreen = 'form'; save(); render(); },
+    newCustomer: function () { state.cEditId = null; state._formTags = []; state._formDraft = null; state._formWorkplaces = [{ unit: '', department: '', schedule: emptySchedule() }]; state.cScreen = 'form'; save(); render(); },
+    editCustomer: function (id) { state.cEditId = id; state._formTags = (findCustomer(id) || { tags: [] }).tags.slice(); state._formDraft = null; var ec = findCustomer(id); state._formWorkplaces = (ec.workplaces && ec.workplaces.length) ? JSON.parse(JSON.stringify(ec.workplaces)) : [{ unit: ec.unit || '', department: ec.department || '', schedule: JSON.parse(JSON.stringify(ec.schedule && ec.schedule.mode ? ec.schedule : emptySchedule())) }]; state.cScreen = 'form'; save(); render(); },
     toggleFormTag: function (id) {
       var nid = Number(id);
       var i = state._formTags.indexOf(nid);
@@ -1414,6 +1451,111 @@
       // 只切换样式，避免重渲染丢失已填内容
       var chip = document.querySelector('.chips .chip[data-id="' + id + '"]');
       if (chip) chip.classList.toggle('on');
+    },
+    nameSuggest: function (v) {
+      var box = document.getElementById('name-suggest');
+      if (!box) return;
+      var k = (v || '').trim();
+      if (!k) { box.innerHTML = ''; return; }
+      var list = state.customers.filter(function (c) { return c.name && c.name.indexOf(k) >= 0; }).slice(0, 5);
+      if (!list.length) { box.innerHTML = ''; return; }
+      box.innerHTML = list.map(function (c) {
+        return '<div class="suggest-item" data-id="' + c.id + '" onclick="APP.fillCustomerFrom(this.dataset.id)" style="padding:7px 10px;border:1px solid #E5E5E5;border-radius:6px;margin-bottom:4px;cursor:pointer;font-size:13px;color:#333;">' + c.name + (c.unit ? ' · ' + c.unit : '') + '</div>';
+      }).join('');
+    },
+    fillCustomerFrom: function (id) {
+      var c = findCustomer(id);
+      if (!c) return;
+      var d = state._formDraft || (state._formDraft = {});
+      d.title = c.title || ''; d.phone = c.phone || ''; d.province = c.province || ''; d.city = c.city || ''; d.district = c.district || ''; d.address = c.address || '';
+      var t = document.getElementById('cf-title'); if (t) t.value = d.title;
+      var p = document.getElementById('cf-phone'); if (p) p.value = d.phone;
+      var a = document.getElementById('cf-address'); if (a) a.value = d.address;
+      if (d.province) { APP.regionProvinceChange(d.province); }
+      var citySel = document.getElementById('cf-city');
+      if (citySel && d.city) citySel.innerHTML = regionOptions(regionCities(d.province), d.city);
+      var distSel = document.getElementById('cf-district');
+      if (distSel && d.city && d.district) distSel.innerHTML = regionOptions(regionDistricts(d.province, d.city), d.district);
+      if (state._formWorkplaces && state._formWorkplaces.length) {
+        var wp = (c.workplaces && c.workplaces.length) ? c.workplaces[0] : null;
+        state._formWorkplaces[0].unit = wp ? wp.unit : (c.unit || '');
+        state._formWorkplaces[0].department = wp ? wp.department : (c.department || '');
+        var u = document.getElementById('fw-unit-0'); if (u) u.value = state._formWorkplaces[0].unit;
+        var dp = document.getElementById('fw-dept-0'); if (dp) dp.value = state._formWorkplaces[0].department;
+      }
+      var sb = document.getElementById('name-suggest'); if (sb) sb.innerHTML = '';
+    },
+    formDraft: function (k, v) { if (!state._formDraft) state._formDraft = {}; state._formDraft[k] = v; },
+    regionDistrictChange: function (d) { if (!state._formDraft) state._formDraft = {}; state._formDraft.district = d; },
+    workplaceInput: function (i, k, v) { if (!state._formWorkplaces || !state._formWorkplaces[i]) return; state._formWorkplaces[i][k] = v; },
+    addWorkplace: function () { if (!state._formWorkplaces) state._formWorkplaces = []; state._formWorkplaces.push({ unit: '', department: '', schedule: emptySchedule() }); save(); render(); },
+    removeWorkplace: function (i) { state._formWorkplaces.splice(i, 1); save(); render(); },
+    formWtOpen: function (i) {
+      state._formWtIdx = i; state._formWtDay = null;
+      state._formSchedule = JSON.parse(JSON.stringify(state._formWorkplaces[i].schedule && state._formWorkplaces[i].schedule.mode ? state._formWorkplaces[i].schedule : emptySchedule()));
+      var box = el('<div class="modal-overlay" id="formwt-overlay"></div>');
+      document.body.appendChild(box);
+      APP.formWtRender();
+    },
+    formWtRender: function () {
+      var box = document.getElementById('formwt-overlay');
+      if (!box) return;
+      var s = state._formSchedule;
+      var h = '<div class="modal-box" style="max-height:82vh;overflow-y:auto;">' +
+        '<div class="modal-title">工作时间 · 单位 ' + (state._formWtIdx + 1) + '</div>' +
+        '<div style="display:flex;gap:6px;margin-bottom:10px;">' +
+          '<button class="tool-btn' + (s.mode === 'weekly' ? ' on' : '') + '" onclick="APP.formWtMode(\'weekly\')">每周定期</button>' +
+          '<button class="tool-btn' + (s.mode === 'monthly' ? ' on' : '') + '" onclick="APP.formWtMode(\'monthly\')">每月N天</button>' +
+        '</div>';
+      if (s.mode === 'weekly') {
+        h += '<div class="group-label">工作日</div>' + weeklyRow('mon') + weeklyRow('tue') + weeklyRow('wed') + weeklyRow('thu') + weeklyRow('fri');
+        h += '<div class="group-label">周末</div>' + weeklyRow('sat') + weeklyRow('sun');
+      } else {
+        h += '<div class="filter-title">点日期设置班次</div><div class="cal-grid">';
+        for (var d = 1; d <= 31; d++) {
+          var slots = (s.daySlots || {})[d] || [];
+          h += '<div class="cal-day' + (slots.length ? ' selected' : '') + '" data-d="' + d + '" onclick="APP.formWtDay(' + d + ')"><div class="d">' + d + '</div>' +
+            (slots.length ? slots.map(function (sl) { return '<span class="slot-tag slot-' + sl + '">' + slotShort(sl) + '</span>'; }).join('') : '') + '</div>';
+        }
+        h += '</div>';
+        if (state._formWtDay) {
+          var cur = (s.daySlots || {})[state._formWtDay] || [];
+          h += '<div style="margin-top:8px;font-size:12px;color:#333;">' + state._formWtDay + '号班次：</div>' +
+            '<div class="chips" style="justify-content:center;margin-top:4px;">' +
+              '<span class="chip' + (cur.indexOf('am') >= 0 ? ' on' : '') + '" onclick="APP.formWtSlot(\'am\')">上午</span>' +
+              '<span class="chip' + (cur.indexOf('pm') >= 0 ? ' on' : '') + '" onclick="APP.formWtSlot(\'pm\')">下午</span>' +
+              '<span class="chip' + (cur.indexOf('night') >= 0 ? ' on' : '') + '" onclick="APP.formWtSlot(\'night\')">晚上</span>' +
+            '</div>';
+        }
+      }
+      h += '<div class="modal-actions" style="margin-top:12px;"><button class="btn-primary" onclick="APP.formWtSave()">确定</button>' +
+        '<button class="btn-outline" onclick="APP.closeModal(\'formwt-overlay\')">取消</button></div></div>';
+      box.innerHTML = h;
+    },
+    formWtMode: function (m) {
+      var s = state._formSchedule;
+      if (s.mode === m) return;
+      s.mode = m;
+      if (m === 'weekly') { if (!s.week) s.week = emptyWeekly(); }
+      else { if (!s.daySlots) s.daySlots = {}; }
+      state._formWtDay = null;
+      APP.formWtRender();
+    },
+    formWtDay: function (d) { state._formWtDay = d; APP.formWtRender(); },
+    formWtSlot: function (sl) {
+      var s = state._formSchedule;
+      if (!s.daySlots) s.daySlots = {};
+      if (!s.daySlots[state._formWtDay]) s.daySlots[state._formWtDay] = [];
+      var arr = s.daySlots[state._formWtDay];
+      var i = arr.indexOf(sl);
+      if (i >= 0) arr.splice(i, 1); else arr.push(sl);
+      APP.formWtRender();
+    },
+    formWtSave: function () {
+      state._formWorkplaces[state._formWtIdx].schedule = JSON.parse(JSON.stringify(state._formSchedule));
+      state._formSchedule = null; state._formWtIdx = null; state._formWtDay = null;
+      this.closeModal('formwt-overlay');
+      save(); render();
     },
     regionProvinceChange: function (prov) {
       state._formDraft = state._formDraft || {};
@@ -1516,6 +1658,7 @@
           name: d.name, title: d.title, phone: d.phone,
           province: province, city: city, district: district,
           unit: unit, department: department, address: mainAddr,
+          workplaces: [{ unit: unit, department: department, schedule: d.schedule }],
           locations: selLocs, tags: [],
           schedule: JSON.parse(JSON.stringify(d.schedule)),
           notes: []
@@ -1626,21 +1769,30 @@
       var province = document.getElementById('cf-province').value.trim();
       var city = document.getElementById('cf-city').value.trim();
       var district = document.getElementById('cf-district').value.trim();
-      var unit = document.getElementById('cf-unit').value.trim();
-      var department = (document.getElementById('cf-department') || {}).value ? document.getElementById('cf-department').value.trim() : '';
+      var workplaces = [];
+      for (var wi = 0; wi < state._formWorkplaces.length; wi++) {
+        var wu = ((document.getElementById('fw-unit-' + wi) || {}).value || '').trim();
+        var wd = ((document.getElementById('fw-dept-' + wi) || {}).value || '').trim();
+        if (wu) workplaces.push({ unit: wu, department: wd, schedule: JSON.parse(JSON.stringify(state._formWorkplaces[wi].schedule)) });
+      }
+      var unit = workplaces.length ? workplaces[0].unit : '';
+      var department = workplaces.length ? workplaces[0].department : '';
       var address = document.getElementById('cf-address').value.trim();
       var err = document.getElementById('cf-err');
       if (!name) { err.textContent = '请填写姓名'; return; }
       if (!city || !district) { err.textContent = '请填写城市和地区'; return; }
-      var sched = state._formSchedule ? JSON.parse(JSON.stringify(state._formSchedule)) : null;
+      var sched = workplaces.length ? workplaces[0].schedule : null;
       if (state.cEditId) {
         var c = findCustomer(state.cEditId);
         c.name = name; c.title = title; c.phone = phone; c.province = province; c.city = city;
-        c.district = district; c.unit = unit; c.department = department; c.address = address; c.tags = state._formTags.slice();
+        c.district = district; c.unit = unit; c.department = department; c.workplaces = workplaces; c.address = address; c.tags = state._formTags.slice();
         if (sched) c.schedule = sched;
       } else {
-        state.customers.push({ id: Date.now(), name: name, title: title, phone: phone, province: province, city: city,
-          district: district, unit: unit, department: department, address: address, tags: state._formTags.slice(), schedule: sched || emptySchedule(), notes: [] });
+        var newCust = { id: Date.now(), name: name, title: title, phone: phone, province: province, city: city,
+          district: district, unit: unit, department: department, address: address, workplaces: workplaces, tags: state._formTags.slice(), schedule: sched || emptySchedule(), notes: [], locations: [] };
+        state.customers.push(newCust);
+        var noteText = ((document.getElementById('cf-note') || {}).value || '').trim();
+        if (noteText) newCust.notes = [{ id: Date.now(), text: noteText, image: null, date: dstr(0) }];
       }
       state.cEditId = null; state._formTags = []; state._formSchedule = null; state._formDraft = null; state.cScreen = 'list'; save(); render();
     },
