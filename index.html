@@ -980,6 +980,33 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .leaflet-bar a { background: var(--surface); color: var(--ink); border-bottom: 1px solid var(--line); }
   .leaflet-bar a:hover { background: var(--subtle); }
 
+  /* ===== 字体协调（frontend-design 统一字号阶） ===== */
+  body, .content, .input, .modal-box, .addrpick-box { line-height: 1.5; }
+  .nav-title { font-size: 16px; }
+  .home-greet { font-size: 19px; }
+  .stat-card .sc-num { font-size: 22px; }
+  .card-name, .cust-name { font-size: 15px; }
+  .card-dates, .cust-title, .cust-unit, .card-detail, .kv, .note-date, .coord-tip, .ap-addr { font-size: 12px; }
+  .group-label, .filter-title { font-size: 13px; }
+  .visit-group-date { font-size: 13px; }
+  .cal-cell .cc-day { font-size: 15px; }
+  .cal-day .d { font-size: 12px; }
+  .card-pct { font-size: 14px; }
+  .btn-primary, .btn-outline { font-size: 14px; }
+  .tool-btn { font-size: 12px; }
+  .chip { font-size: 12px; }
+  .slot-badge { font-size: 11px; }
+  .empty { font-size: 13px; }
+  /* ===== 顺路导航 ===== */
+  .route-panel .rec-row span:first-child { font-weight: 600; color: var(--ink); }
+  .route-stop-row { display: flex; gap: 6px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--text-2); }
+  .route-stop-row b { color: var(--ink); }
+  .route-mode-hint { font-size: 12px; color: var(--text-2); margin-bottom: 8px; }
+  /* ===== 拜访日期值班月历 ===== */
+  .v-cal-wrap .cal-day { min-height: 38px; }
+  .v-cal-wrap .cal-day .d { font-size: 12px; }
+  .cal-day.duty-mark { border-color: var(--ring); }
+
 </style>
 </head>
 
@@ -1065,6 +1092,18 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (!c.schedule || !c.schedule.mode) c.schedule = { mode: 'weekly', week: { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] } };
       if (state._formSchedule === undefined) state._formSchedule = null;
       if (state._schedFrom === undefined) state._schedFrom = null;
+      if (!c.workplaces || !c.workplaces.length) {
+        c.workplaces = [{ unit: c.unit || '', department: c.department || '', schedule: c.schedule, province: c.province || '', city: c.city || '', district: c.district || '', address: c.address || '', lat: c.lat || '', lng: c.lng || '' }];
+      }
+      c.workplaces.forEach(function (wp, wix) {
+        if (wp.province === undefined) wp.province = (wix === 0 ? (c.province || '') : '');
+        if (wp.city === undefined) wp.city = (wix === 0 ? (c.city || '') : '');
+        if (wp.district === undefined) wp.district = (wix === 0 ? (c.district || '') : '');
+        if (wp.address === undefined) wp.address = (wix === 0 ? (c.address || '') : '');
+        if (wp.lat === undefined) wp.lat = (wix === 0 ? (c.lat || '') : '');
+        if (wp.lng === undefined) wp.lng = (wix === 0 ? (c.lng || '') : '');
+        if (!wp.schedule || !wp.schedule.mode) wp.schedule = { mode: 'weekly', week: { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] } };
+      });
     });
     if (state.cScreen === undefined) state.cScreen = 'list';
     if (state.cSelId === undefined) state.cSelId = null;
@@ -1089,6 +1128,20 @@ svg.leaflet-image-layer.leaflet-interactive path {
     if (state._formLng === undefined) state._formLng = '';
     if (state._pickAddr === undefined) state._pickAddr = '';
     if (state._pickResult === undefined) state._pickResult = null;
+    if (state.mapVisitOnly === undefined) state.mapVisitOnly = false;
+    if (state.routeMode === undefined) state.routeMode = false;
+    if (state.routeSel === undefined) state.routeSel = {};
+    if (state.routeInfo === undefined) state.routeInfo = null;
+    if (state._visitCalY === undefined) state._visitCalY = today.getFullYear();
+    if (state._visitCalM === undefined) state._visitCalM = today.getMonth();
+    if (state._visitDate === undefined) state._visitDate = '';
+    if (state._schedViewY === undefined) state._schedViewY = today.getFullYear();
+    if (state._schedViewM === undefined) state._schedViewM = today.getMonth();
+    if (state._formWtY === undefined) state._formWtY = today.getFullYear();
+    if (state._formWtM === undefined) state._formWtM = today.getMonth();
+    if (state._batchWtY === undefined) state._batchWtY = today.getFullYear();
+    if (state._batchWtM === undefined) state._batchWtM = today.getMonth();
+    if (state._formAddrIdx === undefined) state._formAddrIdx = null;
     if (state.mapDate === undefined) state.mapDate = dstr(0);
     if (state.mapTags === undefined) state.mapTags = [];
     state.customers.forEach(function (c) { if (c.lat === undefined) c.lat = ''; if (c.lng === undefined) c.lng = ''; });
@@ -1553,7 +1606,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
     var wps = (c.workplaces && c.workplaces.length) ? c.workplaces : (c.unit ? [{ unit: c.unit, department: c.department, schedule: c.schedule }] : []);
     if (wps.length) {
       wps.forEach(function (wp) {
-        h += '<div class="rec-row"><span>' + (wp.unit || '') + (wp.department ? ' · ' + wp.department : '') + '</span><span>' + scheduleSummaryText({ schedule: wp.schedule }) + '</span></div>';
+        var wpAddr = [wp.province, wp.city, wp.district, wp.address].filter(function (x) { return x && String(x).trim(); }).join('');
+        h += '<div class="filter-panel" style="padding:10px;margin-bottom:8px;">' +
+          '<div style="font-weight:700;font-size:13px;color:var(--ink);">' + (wp.unit || '未填单位') + (wp.department ? ' · ' + wp.department : '') + '</div>' +
+          (wpAddr ? '<div style="font-size:12px;color:var(--text-2);margin-top:4px;">' + wpAddr + '</div>' : '<div style="font-size:12px;color:var(--text-3);margin-top:4px;">未填地址</div>') +
+          '<div style="font-size:12px;color:var(--text-2);margin-top:4px;">' + scheduleSummaryText({ schedule: wp.schedule }) + '</div>' +
+        '</div>';
       });
     } else {
       h += '<div class="empty" style="padding:10px 0;">暂未设置工作单位</div>';
@@ -1611,19 +1669,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
       h += '<div class="group-label">周末</div>';
       h += weeklyRow('sat') + weeklyRow('sun');
     } else {
-      h += '<div class="filter-title">每月哪几天上班（点日期分别设置班次）</div>';
-      h += '<div class="cal-grid">';
-      for (var d = 1; d <= 31; d++) {
-        var slots = (s.daySlots || {})[d] || [];
-        h += '<div class="cal-day' + (slots.length ? ' selected' : '') + '" data-d="' + d + '" onclick="APP.schedEditDay(this.dataset.d)">' +
-          '<div class="d">' + d + '</div>' +
-          (slots.length ? slots.map(function (sl) { return '<span class="slot-tag slot-' + sl + '">' + slotShort(sl) + '</span>'; }).join('') : '') +
-        '</div>';
-      }
-      h += '</div>';
-      h += '<div style="font-size:11px;color:var(--text-3);margin-top:10px;">点击日期为当天设置班次（可多选）</div>';
+      h += '<div class="filter-title">每月排班（真实日历，可逐日调整）</div>';
+      h += schedMonthNavHTML(state._schedViewY, state._schedViewM, 'schedMonthNav');
+      h += schedMonthGridHTML(s, state._schedViewY, state._schedViewM, 'APP.schedEditDay');
+      h += '<div style="font-size:12px;color:var(--text-3);margin-top:8px;">点击日期为当天设置班次（可多选）；从「每周定期」切换过来会自动勾选对应日期</div>';
     }
-    h += '<div id="sched-preview" style="font-size:11px;color:var(--text-3);margin-top:14px;">当前设置：' + scheduleSummaryText({ schedule: s }) + '</div>';
+      h += '<div id="sched-preview" style="font-size:11px;color:var(--text-3);margin-top:14px;">当前设置：' + scheduleSummaryText({ schedule: s }) + '</div>';
     h += '</div>';
     return h;
   }
@@ -1651,20 +1702,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }).join('');
     return h + '<span class="chip" style="border-style:dashed;" onclick="APP.formAddTag()">＋ 新建标签</span>';
   }
-  function screenCustomerForm() {
+    function screenCustomerForm() {
     var editing = state.cEditId ? findCustomer(state.cEditId) : null;
-    var f = editing ? { name: editing.name, title: editing.title, phone: editing.phone, province: editing.province || '', city: editing.city, district: editing.district, unit: editing.unit, department: editing.department || '', address: editing.address }
-                    : { name: '', title: '', phone: '', province: '福建省', city: '福州市', district: '', unit: '', department: '', address: '' };
-    // 恢复进入工作时间前保存的输入
+    var f = editing ? { name: editing.name, title: editing.title, phone: editing.phone, note: (editing.notes && editing.notes.length ? editing.notes[0].text : '') } : { name: '', title: '', phone: '', note: '' };
     if (state._formDraft) { f = Object.assign({}, f, state._formDraft); }
-    var provList = regionProvinces();
-    var cityList = f.province ? regionCities(f.province) : [];
-    var distList = (f.province && f.city) ? regionDistricts(f.province, f.city) : [];
-    var provOptions = regionOptions(provList, f.province);
-    var cityOptions = regionOptions(cityList, f.city);
-    var distOptions = regionOptions(distList, f.district);
-    var fsSched = state._formSchedule ? state._formSchedule : (editing ? editing.schedule : null);
-    var formSchedText = fsSched && fsSched.mode ? scheduleSummaryText({ schedule: fsSched }) : '未设置';
     var h = nav(editing ? '编辑客户' : '新增客户',
       '<span onclick="APP.backCustomer()">取消</span>',
       '<span class="primary" onclick="APP.saveCustomer()">保存</span>');
@@ -1672,22 +1713,27 @@ svg.leaflet-image-layer.leaflet-interactive path {
       '<div class="field"><label>姓名</label><input class="input" id="cf-name" value="' + f.name + '" placeholder="如：王建国" oninput="APP.formDraft(\'name\', this.value);APP.nameSuggest(this.value)"></div>' +
       '<div id="name-suggest"></div>' +
       '<div class="field"><label>职称（选填）</label><input class="input" id="cf-title" value="' + f.title + '" placeholder="如：主任医师" oninput="APP.formDraft(\'title\', this.value)"></div>' +
-      '<div class="field"><label>电话（选填）</label><input class="input" id="cf-phone" value="' + f.phone + '" placeholder="选填" oninput="APP.formDraft(\'phone\', this.value)"></div>' +
-      '<div class="field"><label>省份</label><select class="input" id="cf-province" onchange="APP.regionProvinceChange(this.value)">' + provOptions + '</select></div>' +
-      '<div class="field"><label>城市</label><select class="input" id="cf-city" onchange="APP.regionCityChange(this.value)">' + cityOptions + '</select></div>' +
-      '<div class="field"><label>地区</label><select class="input" id="cf-district" onchange="APP.regionDistrictChange(this.value)">' + distOptions + '</select></div>' +
-      '<div class="field"><label>详细地址（选填）</label><input class="input" id="cf-address" value="' + f.address + '" placeholder="如：浦东新区浦建路160号" oninput="APP.formDraft(\'address\', this.value);APP.clearPickedAddr()"></div>' +
-      '<div class="field"><label></label><button class="btn-outline" style="padding:9px;font-size:13px;" onclick="APP.openAddrPick()">📍 地图选地址</button>' +
-      '<div id="pick-addr-tip" class="coord-tip">' + (state._pickAddr ? '已选地址：' + state._pickAddr : '可通过 定位 / 搜索 / 地图点选 快速选地址') + '</div></div>';
-    h += '<div class="filter-title" style="margin-top:10px;">工作单位（选填，可多个）</div>';
+      '<div class="field"><label>电话（选填）</label><input class="input" id="cf-phone" value="' + f.phone + '" placeholder="选填" oninput="APP.formDraft(\'phone\', this.value)"></div>';
+    h += '<div class="filter-title" style="margin-top:10px;">工作单位（选填，可多个；每个单位自带地址与工作时间）</div>';
     state._formWorkplaces.forEach(function (wp, wi) {
+      var wProvOptions = regionOptions(regionProvinces(), wp.province || '');
+      var wCityOptions = wp.province ? regionOptions(regionCities(wp.province), wp.city || '') : regionOptions([], '');
+      var wDistOptions = (wp.province && wp.city) ? regionOptions(regionDistricts(wp.province, wp.city), wp.district || '') : regionOptions([], '');
       h += '<div class="filter-panel" style="padding:10px;margin-bottom:8px;">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
           '<span style="font-weight:700;font-size:13px;">单位 ' + (wi + 1) + '</span>' +
           (state._formWorkplaces.length > 1 ? '<span style="color:var(--text-2);cursor:pointer;font-size:12px;" onclick="APP.removeWorkplace(' + wi + ')">删除</span>' : '') +
         '</div>' +
-        '<div class="field"><label>工作单位</label><input class="input" id="fw-unit-' + wi + '" value="' + (wp.unit || '') + '" placeholder="如：仁济医院" oninput="APP.workplaceInput(' + wi + ', \'unit\', this.value)"></div>' +
+        '<div class="field"><label>工作单位</label><input class="input" id="fw-unit-' + wi + '" value="' + (wp.unit || '') + '" placeholder="如：福建省立医院" oninput="APP.workplaceInput(' + wi + ', \'unit\', this.value)"></div>' +
         '<div class="field"><label>科室</label><input class="input" id="fw-dept-' + wi + '" value="' + (wp.department || '') + '" placeholder="如：心内科" oninput="APP.workplaceInput(' + wi + ', \'department\', this.value)"></div>' +
+        '<div style="display:flex;gap:6px;">' +
+          '<div class="field" style="flex:1;min-width:0;"><label>省份</label><select class="input" id="fw-province-' + wi + '" onchange="APP.wpProvinceChange(' + wi + ', this.value)">' + wProvOptions + '</select></div>' +
+          '<div class="field" style="flex:1;min-width:0;"><label>城市</label><select class="input" id="fw-city-' + wi + '" onchange="APP.wpCityChange(' + wi + ', this.value)">' + wCityOptions + '</select></div>' +
+          '<div class="field" style="flex:1;min-width:0;"><label>地区</label><select class="input" id="fw-district-' + wi + '" onchange="APP.wpDistrictChange(' + wi + ', this.value)">' + wDistOptions + '</select></div>' +
+        '</div>' +
+        '<div class="field"><label>详细地址（选填）</label><input class="input" id="fw-addr-' + wi + '" value="' + (wp.address || '') + '" placeholder="如：鼓楼区东街134号" oninput="APP.wpAddrInput(' + wi + ', this.value)"></div>' +
+        '<div class="field"><label></label><button class="btn-outline" style="padding:9px;font-size:13px;" onclick="APP.openAddrPickFor(' + wi + ')">📍 地图选地址</button>' +
+          '<div id="pick-addr-tip-' + wi + '" class="coord-tip">' + ((wp.address || wp.lat) ? '已填地址，可点上方按钮在地图上快速选点' : '可通过 定位 / 搜索 / 地图点选 快速选地址') + '</div></div>' +
         '<div class="field"><label>工作时间</label>' +
           '<button class="btn-outline" style="padding:8px;font-size:12px;" onclick="APP.formWtOpen(' + wi + ')">设置工作时间</button>' +
           '<div class="coord-tip">' + scheduleSummaryText({ schedule: wp.schedule }) + '</div>' +
@@ -1697,7 +1743,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
     h += '<div class="btn-dashed" onclick="APP.addWorkplace()">＋ 添加工作单位</div>';
     h += '<div class="filter-title" style="margin-top:12px;">备注（选填）</div>';
     h += '<textarea class="input" id="cf-note" rows="2" placeholder="写点什么..." oninput="APP.formDraft(\'note\', this.value)">' + (f.note || '') + '</textarea>';
-
     h += '<div class="field"><label>标签</label><div class="chips" id="form-tag-chips">' + formTagChipsHTML() + '</div></div>';
     h += '<div class="err" id="cf-err"></div>' +
       '<button class="btn-primary" onclick="APP.saveCustomer()">保存</button>' +
@@ -1971,11 +2016,44 @@ svg.leaflet-image-layer.leaflet-interactive path {
     d.setDate(d.getDate() + (offset || 0));
     return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
   }
+  // ========== 地图：拜访计划筛选 + 多医生顺路导航 ==========
+  var _routeMapPoly = null;
+  function routeSelectedCustomers() {
+    return state.customers.filter(function (c) { return state.routeSel[String(c.id)]; });
+  }
+  function haversineKm(lat1, lng1, lat2, lng2) {
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLng = (lng2 - lng1) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+  function nearestOrder(start, pts) {
+    var order = [];
+    var used = {};
+    var cur = start;
+    while (order.length < pts.length) {
+      var best = -1, bd = Infinity;
+      for (var i = 0; i < pts.length; i++) {
+        if (used[i]) continue;
+        var d = haversineKm(cur.lat, cur.lng, pts[i].lat, pts[i].lng);
+        if (d < bd) { bd = d; best = i; }
+      }
+      used[best] = true; order.push(best); cur = pts[best];
+    }
+    return order;
+  }
   function mapOnDuty() {
     var ds = state.mapDate;
     return state.customers.filter(function (c) {
       if (customerSlotsOnDate(c, ds).length === 0) return false;
       if (state.mapTags.length && !state.mapTags.some(function (tid) { return c.tags.indexOf(tid) >= 0; })) return false;
+      if (state.mapVisitOnly) {
+        var hasVisit = state.visits.some(function (v) { return String(v.customerId) === String(c.id) && v.date === ds; });
+        if (!hasVisit) return false;
+      }
       return true;
     });
   }
@@ -2077,6 +2155,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
       '<span class="nav-btn" onclick="APP.mapDay(1)">›</span>' +
       '<button class="tool-btn" style="flex:0 0 auto;padding:6px 10px;" onclick="APP.mapToday()">今天</button>' +
     '</div>';
+    h += '<div class="toolbar">' +
+      '<button class="tool-btn' + (state.routeMode ? ' on' : '') + '" onclick="APP.mapToggleRoute()">顺路导航</button>' +
+      '<button class="tool-btn' + (state.mapVisitOnly ? ' on' : '') + '" onclick="APP.mapToggleVisitOnly()">仅看拜访计划</button>' +
+    '</div>';
+    if (state.routeMode) {
+      h += '<div class="route-mode-hint">已选 ' + Object.keys(state.routeSel).length + ' 位医生（从我的定位起，按最近优先自动排序）。选中至少 2 位后点「规划路线」。</div>';
+    }
     h += '<div class="chips" style="margin-bottom:10px;">' +
       state.tags.map(function (t) {
         var on = state.mapTags.indexOf(t.id) >= 0;
@@ -2097,15 +2182,41 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (c.lat && c.lng) stTag = '<span class="tagchip">已定位</span>';
       else if (!addr) stTag = '<span class="tagchip">无地址</span>';
       else stTag = '<span class="tagchip">定位中</span>';
-      h += '<div class="cust-row" data-id="' + c.id + '" onclick="APP.openCustomerFromMap(this.dataset.id)">' +
-        '<div class="cust-main">' +
+      var main = '<div class="cust-main">' +
           '<div class="cust-name">' + c.name + '<span class="cust-title">' + (c.title || '') + '</span></div>' +
           '<div class="cust-unit">' + (c.unit || '') + (c.department ? ' · ' + c.department : '') + ' · ' + addr + '</div>' +
           '<div class="cust-tags">' + slots.map(function (s) { return '<span class="slot-badge">' + slotName(s) + '</span>'; }).join('') + '</div>' +
-        '</div>' +
-        '<div style="flex-shrink:0;">' + stTag + '</div>' +
-      '</div>';
+        '</div>';
+      if (state.routeMode) {
+        var sel = state.routeSel[String(c.id)];
+        h += '<div class="cust-row' + (sel ? ' selected' : '') + '" data-id="' + c.id + '" onclick="APP.routeToggle(this.dataset.id)">' +
+          '<div class="sel-circle' + (sel ? ' on' : '') + '"></div>' + main + '</div>';
+      } else {
+        h += '<div class="cust-row" data-id="' + c.id + '" onclick="APP.openCustomerFromMap(this.dataset.id)">' +
+          main + '<div style="flex-shrink:0;">' + stTag + '</div></div>';
+      }
     });
+    if (state.routeMode && Object.keys(state.routeSel).length >= 2) {
+      h += '<button class="btn-primary" style="margin-top:6px;" onclick="APP.routePlan()">规划路线</button>';
+    }
+    if (state.routeInfo) {
+      h += '<div class="filter-panel" style="margin-top:12px;">' +
+        '<div class="filter-title">路线规划结果</div>' +
+        '<div class="rec-row"><span>总距离</span><span>' + state.routeInfo.distance + '</span></div>' +
+        '<div class="rec-row"><span>预计驾车时长</span><span>' + state.routeInfo.duration + '</span></div>' +
+        '<div class="group-label" style="margin-top:8px;">途经顺序</div>' +
+        state.routeInfo.stops.map(function (s, i) {
+          return '<div class="route-stop-row"><span style="flex:0 0 22px;font-weight:700;">' + (i + 1) + '</span><b style="flex:1;">' + s + '</b></div>';
+        }).join('') +
+        '<div style="display:flex;gap:6px;margin-top:10px;">' +
+          '<button class="tool-btn" onclick="APP.routeJump(\'car\')">🚗 驾车</button>' +
+          '<button class="tool-btn" onclick="APP.routeJump(\'bus\')">🚌 公交</button>' +
+          '<button class="tool-btn" onclick="APP.routeJump(\'walk\')">🚶 步行</button>' +
+          '<button class="tool-btn" onclick="APP.routeJump(\'ride\')">🚲 骑行</button>' +
+        '</div>' +
+        '<div style="font-size:11px;color:var(--text-3);margin-top:6px;">选择方式后将跳转到高德导航，可在 App 内再切换交通方式。</div>' +
+      '</div>';
+    }
     h += '</div>';
     return h;
   }
@@ -2254,6 +2365,123 @@ svg.leaflet-image-layer.leaflet-interactive path {
     _pickMap.setView([lat, lng], zoom || 15);
   }
 
+  // ========== 工作时间：真实月历（每周定期 ↔ 每月N天 联动）==========
+  function daysOfWeekdayInMonth(wkKey, y, m) {
+    var wkArr = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    var target = wkArr.indexOf(wkKey);
+    var res = [];
+    var dim = new Date(y, m + 1, 0).getDate();
+    for (var d = 1; d <= dim; d++) {
+      if (new Date(y, m, d).getDay() === target) res.push(d);
+    }
+    return res;
+  }
+  function prefillMonthlyFromWeekly(s, y, m) {
+    if (!s || s.mode !== 'monthly') return;
+    if (!s.daySlots) s.daySlots = {};
+    ['mon','tue','wed','thu','fri','sat','sun'].forEach(function (k) {
+      var slots = (s.week && s.week[k]) || [];
+      if (!slots.length) return;
+      daysOfWeekdayInMonth(k, y, m).forEach(function (d) {
+        var merged = (s.daySlots[d] || []).slice();
+        slots.forEach(function (sl) { if (merged.indexOf(sl) < 0) merged.push(sl); });
+        s.daySlots[d] = merged;
+      });
+    });
+  }
+  function schedMonthNavHTML(y, m, navFn) {
+    return '<div style="display:flex;justify-content:space-between;align-items:center;margin:2px 0 8px;">' +
+      '<span class="nav-btn" onclick="APP.' + navFn + '(-1)">‹</span>' +
+      '<span style="font-size:14px;font-weight:700;">' + y + '年' + (m + 1) + '月</span>' +
+      '<span class="nav-btn" onclick="APP.' + navFn + '(1)">›</span>' +
+    '</div>';
+  }
+  function schedMonthGridHTML(s, y, m, tapFn) {
+    var lead = (new Date(y, m, 1).getDay() + 6) % 7;
+    var dim = new Date(y, m + 1, 0).getDate();
+    var prevDim = new Date(y, m, 0).getDate();
+    var todayDs = dstr(0);
+    var h = '<div class="cal-week"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>';
+    h += '<div class="cal-grid">';
+    for (var i = 0; i < lead; i++) {
+      h += '<div class="cal-day other"><div class="d">' + (prevDim - lead + 1 + i) + '</div></div>';
+    }
+    for (var d = 1; d <= dim; d++) {
+      var ds = dateStr(y, m, d);
+      var isToday = ds === todayDs;
+      var slots = (s.daySlots || {})[d] || [];
+      var holi = holidayOf(ds);
+      h += '<div class="cal-day' + (slots.length ? ' selected' : '') + '" data-d="' + d + '" onclick="' + tapFn + '(' + d + ')"' + (isToday ? ' style="border:2px solid var(--ring);"' : '') + '>' +
+        '<div class="d">' + d + '</div>' +
+        (holi ? '<div class="holi">' + holi + '</div>' : '') +
+        (slots.length ? slots.map(function (sl) { return '<span class="slot-tag slot-' + sl + '">' + slotShort(sl) + '</span>'; }).join('') : '') +
+      '</div>';
+    }
+    var tail = 7 - ((lead + dim) % 7 || 7);
+    for (var t = 0; t < tail; t++) h += '<div class="cal-day other"><div class="d">' + (t + 1) + '</div></div>';
+    h += '</div>';
+    return h;
+  }
+
+  // ========== 拜访：值班日期月历 ==========
+  function nextDutyDate(c) {
+    var base = new Date(); base.setHours(0, 0, 0, 0);
+    for (var i = 0; i < 31; i++) {
+      var d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
+      var ds = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+      if (customerSlotsOnDate(c, ds).length > 0) return ds;
+    }
+    return '';
+  }
+  function visitCalHTML(c, y, m, selDs) {
+    var lead = (new Date(y, m, 1).getDay() + 6) % 7;
+    var dim = new Date(y, m + 1, 0).getDate();
+    var prevDim = new Date(y, m, 0).getDate();
+    var todayDs = dstr(0);
+    var h = '<div class="cal-week"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>';
+    h += '<div class="cal-grid">';
+    for (var i = 0; i < lead; i++) h += '<div class="cal-day other"><div class="d">' + (prevDim - lead + 1 + i) + '</div></div>';
+    for (var d = 1; d <= dim; d++) {
+      var ds = dateStr(y, m, d);
+      var isToday = ds === todayDs;
+      var isSel = ds === selDs;
+      var duty = c ? (customerSlotsOnDate(c, ds).length > 0) : false;
+      h += '<div class="cal-day' + (isSel ? ' selected' : '') + '" data-ds="' + ds + '" onclick="APP.visitCalPick(this.dataset.ds)"' + (isToday ? ' style="border:2px solid var(--ring);"' : '') + '>' +
+        '<div class="d">' + d + '</div>' +
+        (duty ? '<div class="cc-dot">●</div>' : '') +
+      '</div>';
+    }
+    var tail = 7 - ((lead + dim) % 7 || 7);
+    for (var t = 0; t < tail; t++) h += '<div class="cal-day other"><div class="d">' + (t + 1) + '</div></div>';
+    h += '</div>';
+    return h;
+  }
+  function visitModalHTML(title, c, opts, editing) {
+    var slots = editing ? ((state._visitSlots || [])) : ['am'];
+    var ch = function (s, nm) {
+      return '<span class="chip' + (slots.indexOf(s) >= 0 ? ' on' : '') + '" id="v-' + s + '" onclick="APP.toggleVisitSlot(this,\'' + s + '\')">' + nm + '</span>';
+    };
+    return '<div class="modal-overlay" id="visit-overlay"><div class="modal-box" style="max-width:360px;max-height:86vh;overflow-y:auto;">' +
+      '<div class="modal-title">' + title + (c ? ' · ' + c.name : '') + '</div>' +
+      (editing ? '<div class="field"><label>客户</label><select class="input" id="v-cust">' + opts + '</select></div>' : '') +
+      '<div class="field"><label>拜访日期（●=该客户当天值班）</label>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin:2px 0 6px;">' +
+          '<span class="nav-btn" onclick="APP.visitCalNav(-1)">‹</span>' +
+          '<span style="font-size:13px;font-weight:700;" id="v-cal-title">' + state._visitCalY + '年' + (state._visitCalM + 1) + '月</span>' +
+          '<span class="nav-btn" onclick="APP.visitCalNav(1)">›</span>' +
+        '</div>' +
+        '<div class="v-cal-wrap" id="v-cal">' + visitCalHTML(c, state._visitCalY, state._visitCalM, state._visitDate) + '</div>' +
+        '<div style="font-size:12px;font-weight:700;color:var(--ink);margin-top:6px;" id="v-date-text">' + state._visitDate + '</div>' +
+      '</div>' +
+      '<div class="field"><label>当日班次（可多选）</label><div class="chips" style="justify-content:center;">' +
+        ch('am', '上午') + ch('pm', '下午') + ch('night', '晚上') +
+      '</div></div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn-primary" onclick="' + (editing ? 'APP.saveVisitEdit()' : 'APP.saveVisit()') + '">确认</button>' +
+        '<button class="btn-outline" onclick="APP.closeModal(\'visit-overlay\')">取消</button>' +
+      '</div></div></div>';
+  }
+
   function sidebar() {
     var items = [
       { key: 'home', label: '首页' },
@@ -2278,7 +2506,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   }
   function render() {
     autoArchive();
-    if (window._map) { try { window._map.remove(); } catch (e) {} window._map = null; }
+    if (window._map) { try { window._map.stop(); } catch (e) {} try { window._map.remove(); } catch (e) {} window._map = null; }
     var h;
     if (state.tab === 'home') h = renderHome();
     else if (state.tab === 'calendar') h = renderCalendar();
@@ -2320,7 +2548,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     mapRetry: function () { _geoFail = {}; save(); render(); },
     mapMount: function () {
       if (state.tab !== 'map') return;
-      if (window._map) { try { window._map.remove(); } catch (e) {} window._map = null; }
+      if (window._map) { try { window._map.stop(); } catch (e) {} try { window._map.remove(); } catch (e) {} window._map = null; }
       var box = document.getElementById('map-box');
       if (!box) return;
       var list = mapOnDuty();
@@ -2362,15 +2590,26 @@ svg.leaflet-image-layer.leaflet-interactive path {
       }
       if (pts.length === 1) window._map.setView(pts[0], 12);
       else if (pts.length > 1) window._map.fitBounds(pts, { padding: [30, 30] });
+      if (state.routeInfo && state.routeInfo.pts && state.routeInfo.pts.length && window._map) {
+        try {
+          if (_routeMapPoly) _routeMapPoly.remove();
+          _routeMapPoly = L.polyline(state.routeInfo.pts, { color: '#263554', weight: 4, opacity: 0.8 }).addTo(window._map);
+          window._map.fitBounds(_routeMapPoly.getBounds(), { padding: [30, 30] });
+        } catch (e) {}
+      }
     },
 
-    openAddrPick: function () {
+    openAddrPickFor: function (i) {
+      if (!state._formWorkplaces[i]) return;
+      state._formAddrIdx = i;
       state._pickResult = null;
-      state._pickLat = state._formLat || '';
-      state._pickLng = state._formLng || '';
+      var wp = state._formWorkplaces[i];
+      state._pickLat = wp.lat || '';
+      state._pickLng = wp.lng || '';
+      state._pickAddr = wp.address || '';
       var box = el('<div class="modal-overlay addrpick-overlay" id="addrpick-overlay">' +
         '<div class="addrpick-box">' +
-          '<div class="addrpick-head"><span>选择地址</span><span class="close" onclick="APP.closeAddrPick()">✕ 关闭</span></div>' +
+          '<div class="addrpick-head"><span>选择地址 · 单位 ' + (i + 1) + '</span><span class="close" onclick="APP.closeAddrPick()">✕ 关闭</span></div>' +
           '<div class="addrpick-search">' +
             '<input class="input" id="ap-kw" placeholder="搜索地址 / 医院 / 单位名" oninput="APP.addrPickSearch(this.value)">' +
             '<button class="locate" onclick="APP.addrPickLocate()">📍 定位</button>' +
@@ -2387,6 +2626,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       APP.addrPickMountMap();
       pickRenderList([], '点击「📍 定位」使用当前位置找最近的点，或输入关键词搜索、直接在地图上点选');
     },
+
     closeAddrPick: function () {
       var o = document.getElementById('addrpick-overlay');
       if (o) o.remove();
@@ -2413,8 +2653,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (!v) { pickRenderList([], '点击「📍 定位」使用当前位置找最近的点，或输入关键词搜索、直接在地图上点选'); return; }
       _pickTimer = setTimeout(function () {
         var city = '';
-        var pSel = document.getElementById('cf-province');
-        var cSel = document.getElementById('cf-city');
+        var i = state._formAddrIdx;
+        var pSel = (i !== null && i !== undefined) ? document.getElementById('fw-province-' + i) : null;
+        var cSel = (i !== null && i !== undefined) ? document.getElementById('fw-city-' + i) : null;
         if (pSel && pSel.value && cSel && cSel.value) city = cSel.value;
         var url = 'https://restapi.amap.com/v3/assistant/inputtips?key=' + AMAP_KEY + '&keywords=' + encodeURIComponent(v) + '&city=' + encodeURIComponent(city) + '&datatype=all&callback=__apTips';
         apJsonp(url, '__apTips', function (data) {
@@ -2426,6 +2667,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         });
       }, 250);
     },
+
     addrPickLocate: function () {
       var box = document.getElementById('addrpick-list');
       if (box) box.innerHTML = '<div class="ap-hint">正在定位…</div>';
@@ -2488,30 +2730,192 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (row) row.classList.add('on');
     },
     confirmAddrPick: function () {
+      var i = state._formAddrIdx;
+      if (i === null || i === undefined || !state._formWorkplaces[i]) { alert('请先选择要填地址的工作单位'); return; }
       var r = state._pickResult;
       if (!r || !r.location) { alert('请先在地图上选择一个地址'); return; }
       var loc = String(r.location).split(',');
-      state._formLat = loc[1]; state._formLng = loc[0];
-      state._pickAddr = pickAddrFull(r);
-      var d = state._formDraft || (state._formDraft = {});
-      d.province = r.province; d.city = r.city; d.district = r.district; d.address = r.address;
-      var pSel = document.getElementById('cf-province');
-      if (pSel) pSel.innerHTML = regionOptionsAdd(regionProvinces(), r.province);
-      var cSel = document.getElementById('cf-city');
-      if (cSel && r.province) cSel.innerHTML = regionOptionsAdd(regionCities(r.province), r.city);
-      var dSel = document.getElementById('cf-district');
-      if (dSel && r.province && r.city) dSel.innerHTML = regionOptionsAdd(regionDistricts(r.province, r.city), r.district);
-      var aIn = document.getElementById('cf-address');
-      if (aIn) aIn.value = pickDetailAddr(r);
-      var t = document.getElementById('pick-addr-tip');
-      if (t) t.textContent = '已选地址：' + state._pickAddr;
+      var wp = state._formWorkplaces[i];
+      wp.lat = loc[1]; wp.lng = loc[0];
+      wp.province = r.province; wp.city = r.city; wp.district = r.district; wp.address = pickDetailAddr(r);
+      var pSel = document.getElementById('fw-province-' + i);
+      if (pSel) pSel.innerHTML = regionOptionsAdd(regionProvinces(), wp.province);
+      var cSel = document.getElementById('fw-city-' + i);
+      if (cSel && wp.province) cSel.innerHTML = regionOptionsAdd(regionCities(wp.province), wp.city);
+      var dSel = document.getElementById('fw-district-' + i);
+      if (dSel && wp.province && wp.city) dSel.innerHTML = regionOptionsAdd(regionDistricts(wp.province, wp.city), wp.district);
+      var aIn = document.getElementById('fw-addr-' + i);
+      if (aIn) aIn.value = wp.address;
+      var t = document.getElementById('pick-addr-tip-' + i);
+      if (t) t.textContent = '已选地址：' + pickAddrFull(wp);
       APP.closeAddrPick();
     },
+
     clearPickedAddr: function () {
-      state._pickResult = null;
-      state._formLat = ''; state._formLng = ''; state._pickAddr = '';
-      var t = document.getElementById('pick-addr-tip');
-      if (t) t.textContent = '可通过 定位 / 搜索 / 地图点选 快速选地址';
+      var i = state._formAddrIdx;
+      if (i !== null && i !== undefined && state._formWorkplaces[i]) { state._formWorkplaces[i].lat = ''; state._formWorkplaces[i].lng = ''; }
+    },
+
+
+    wpProvinceChange: function (i, prov) {
+      if (!state._formWorkplaces[i]) return;
+      state._formWorkplaces[i].province = prov; state._formWorkplaces[i].city = ''; state._formWorkplaces[i].district = '';
+      var cSel = document.getElementById('fw-city-' + i);
+      var dSel = document.getElementById('fw-district-' + i);
+      if (cSel) cSel.innerHTML = regionOptions(regionCities(prov), '');
+      if (dSel) dSel.innerHTML = regionOptions([], '');
+    },
+    wpCityChange: function (i, city) {
+      if (!state._formWorkplaces[i]) return;
+      state._formWorkplaces[i].city = city; state._formWorkplaces[i].district = '';
+      var prov = state._formWorkplaces[i].province;
+      var dSel = document.getElementById('fw-district-' + i);
+      if (dSel) dSel.innerHTML = regionOptions(regionDistricts(prov, city), '');
+    },
+    wpDistrictChange: function (i, d) { if (state._formWorkplaces[i]) state._formWorkplaces[i].district = d; },
+    wpAddrInput: function (i, v) {
+      if (!state._formWorkplaces[i]) return;
+      state._formWorkplaces[i].address = v;
+      state._formWorkplaces[i].lat = ''; state._formWorkplaces[i].lng = '';
+      var t = document.getElementById('pick-addr-tip-' + i);
+      if (t) t.textContent = '已手动填写地址，地图将按此地址重新定位';
+    },
+    workplaceInput: function (i, k, v) { if (!state._formWorkplaces || !state._formWorkplaces[i]) return; state._formWorkplaces[i][k] = v; },
+    addWorkplace: function () {
+      if (!state._formWorkplaces) state._formWorkplaces = [];
+      state._formWorkplaces.push({ unit: '', department: '', schedule: emptySchedule(), province: '福建省', city: '福州市', district: '', address: '', lat: '', lng: '' });
+      save(); render();
+    },
+    removeWorkplace: function (i) { state._formWorkplaces.splice(i, 1); save(); render(); },
+    newCustomer: function () {
+      state.cEditId = null; state._formTags = []; state._formDraft = null;
+      state._formWorkplaces = [{ unit: '', department: '', schedule: emptySchedule(), province: '福建省', city: '福州市', district: '', address: '', lat: '', lng: '' }];
+      state._formLat = ''; state._formLng = ''; state._pickAddr = ''; state._pickResult = null; state._formAddrIdx = null;
+      state.cScreen = 'form'; save(); render();
+    },
+    editCustomer: function (id) {
+      state.cEditId = id; state._formTags = (findCustomer(id) || { tags: [] }).tags.slice(); state._formDraft = null;
+      var ec = findCustomer(id);
+      state._formWorkplaces = (ec.workplaces && ec.workplaces.length) ? JSON.parse(JSON.stringify(ec.workplaces)) : [];
+      if (!state._formWorkplaces.length) {
+        state._formWorkplaces = [{ unit: ec.unit || '', department: ec.department || '', schedule: JSON.parse(JSON.stringify(ec.schedule && ec.schedule.mode ? ec.schedule : emptySchedule())), province: ec.province || '', city: ec.city || '', district: ec.district || '', address: ec.address || '', lat: ec.lat || '', lng: ec.lng || '' }];
+      }
+      state._formWorkplaces.forEach(function (wp) {
+        if (!wp.schedule || !wp.schedule.mode) wp.schedule = emptySchedule();
+        if (wp.province === undefined) wp.province = ''; if (wp.city === undefined) wp.city = '';
+        if (wp.district === undefined) wp.district = ''; if (wp.address === undefined) wp.address = '';
+        if (wp.lat === undefined) wp.lat = ''; if (wp.lng === undefined) wp.lng = '';
+      });
+      state._formLat = ''; state._formLng = ''; state._pickAddr = ''; state._pickResult = null; state._formAddrIdx = null;
+      state.cScreen = 'form'; save(); render();
+    },
+    fillCustomerFrom: function (id) {
+      var c = findCustomer(id);
+      if (!c) return;
+      var d = state._formDraft || (state._formDraft = {});
+      d.title = c.title || ''; d.phone = c.phone || '';
+      var t = document.getElementById('cf-title'); if (t) t.value = d.title;
+      var p = document.getElementById('cf-phone'); if (p) p.value = d.phone;
+      if (state._formWorkplaces && state._formWorkplaces.length) {
+        var wp = (c.workplaces && c.workplaces.length) ? c.workplaces[0] : null;
+        var w0 = state._formWorkplaces[0];
+        w0.unit = wp ? (wp.unit || '') : (c.unit || '');
+        w0.department = wp ? (wp.department || '') : (c.department || '');
+        w0.province = wp ? (wp.province || '') : (c.province || '');
+        w0.city = wp ? (wp.city || '') : (c.city || '');
+        w0.district = wp ? (wp.district || '') : (c.district || '');
+        w0.address = wp ? (wp.address || '') : (c.address || '');
+        w0.lat = wp ? (wp.lat || '') : (c.lat || '');
+        w0.lng = wp ? (wp.lng || '') : (c.lng || '');
+        var u = document.getElementById('fw-unit-0'); if (u) u.value = w0.unit;
+        var dp = document.getElementById('fw-dept-0'); if (dp) dp.value = w0.department;
+        var ps = document.getElementById('fw-province-0'); if (ps) ps.innerHTML = regionOptionsAdd(regionProvinces(), w0.province);
+        var cs = document.getElementById('fw-city-0'); if (cs && w0.province) cs.innerHTML = regionOptionsAdd(regionCities(w0.province), w0.city);
+        var ds = document.getElementById('fw-district-0'); if (ds && w0.province && w0.city) ds.innerHTML = regionOptionsAdd(regionDistricts(w0.province, w0.city), w0.district);
+        var ad = document.getElementById('fw-addr-0'); if (ad) ad.value = w0.address;
+        var tip = document.getElementById('pick-addr-tip-0');
+        if (tip) tip.textContent = (w0.address || w0.lat) ? '已填地址，可点上方按钮在地图上快速选点' : '可通过 定位 / 搜索 / 地图点选 快速选地址';
+      }
+      var sb = document.getElementById('name-suggest'); if (sb) sb.innerHTML = '';
+    },
+
+    mapToggleRoute: function () {
+      state.routeMode = !state.routeMode;
+      state.routeSel = {}; state.routeInfo = null;
+      save(); render();
+    },
+    mapToggleVisitOnly: function () { state.mapVisitOnly = !state.mapVisitOnly; save(); render(); },
+    routeToggle: function (id) {
+      var k = String(id);
+      if (state.routeSel[k]) delete state.routeSel[k]; else state.routeSel[k] = true;
+      save(); render();
+    },
+    routePlan: function () {
+      var list = routeSelectedCustomers();
+      if (list.length < 2) { alert('请至少选择 2 位医生'); return; }
+      var missing = list.filter(function (c) { return !c.lat || !c.lng; });
+      if (missing.length) { alert('有 ' + missing.length + ' 位医生还没有地图坐标，请先在客户地址中「地图选地址」后再规划'); return; }
+      var self = this;
+      function doPlan(startPt) {
+        var ordered = nearestOrder(startPt, list);
+        var orderedC = ordered.map(function (i) { return list[i]; });
+        var way = orderedC.slice(0, -1).map(function (c) { return c.lng + ',' + c.lat; }).join(';');
+        var dest = orderedC[orderedC.length - 1];
+        var url = 'https://restapi.amap.com/v3/direction/driving?origin=' + startPt.lng + ',' + startPt.lat +
+          '&destination=' + dest.lng + ',' + dest.lat +
+          (way ? '&waypoints=' + way : '') +
+          '&strategy=10&extensions=base&key=' + AMAP_KEY + '&callback=__apRoute';
+        apJsonp(url, '__apRoute', function (data) {
+          if (!data || data.status !== '1' || !data.route || !data.route.paths || !data.route.paths.length) {
+            alert('路线规划失败，请稍后重试');
+            return;
+          }
+          var path = data.route.paths[0];
+          var distKm = (Number(path.distance) / 1000).toFixed(1);
+          var durMin = Math.round(Number(path.duration) / 60);
+          var poly = [];
+          (path.steps || []).forEach(function (st) {
+            (st.polyline || '').split(';').forEach(function (pt) {
+              var p2 = pt.split(',');
+              if (p2.length === 2) poly.push([Number(p2[1]), Number(p2[0])]);
+            });
+          });
+          state.routeInfo = {
+            distance: distKm + ' 公里',
+            duration: durMin + ' 分钟',
+            stops: ['我的位置'].concat(orderedC.map(function (c) { return c.name; })),
+            dest: dest,
+            from: startPt.lng + ',' + startPt.lat,
+            pts: poly
+          };
+          save(); render();
+          if (window._map && poly.length) {
+            try {
+              if (_routeMapPoly) _routeMapPoly.remove();
+              _routeMapPoly = L.polyline(poly, { color: '#263554', weight: 4, opacity: 0.8 }).addTo(window._map);
+              window._map.fitBounds(_routeMapPoly.getBounds(), { padding: [30, 30] });
+            } catch (e) {}
+          }
+        });
+      }
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (pos) {
+          var g = wgs84togcj02(pos.coords.latitude, pos.coords.longitude);
+          doPlan({ lat: g.lat, lng: g.lng });
+        }, function () {
+          doPlan({ lat: Number(list[0].lat), lng: Number(list[0].lng) });
+        }, { enableHighAccuracy: false, timeout: 10000 });
+      } else {
+        doPlan({ lat: Number(list[0].lat), lng: Number(list[0].lng) });
+      }
+    },
+    routeJump: function (mode) {
+      var info = state.routeInfo;
+      if (!info || !info.dest) return;
+      var d = info.dest;
+      var url = 'https://uri.amap.com/navigation?from=' + (info.from || (d.lng + ',' + d.lat)) +
+        '&to=' + d.lng + ',' + d.lat + '&mode=' + mode + '&coordinate=gaode&src=progress';
+      window.open(url, '_blank');
     },
 
     switchTab: function (k) {
@@ -2521,6 +2925,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       state.batchMode = false; state.cSelected = {}; state.showFilter = false;
       state.vScreen = 'list';
       state._formTags = [];
+      state.routeMode = false; state.routeSel = {}; state.routeInfo = null;
       save(); render();
     },
     exportData: function () {
@@ -2812,7 +3217,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     addWorkplace: function () { if (!state._formWorkplaces) state._formWorkplaces = []; state._formWorkplaces.push({ unit: '', department: '', schedule: emptySchedule() }); save(); render(); },
     removeWorkplace: function (i) { state._formWorkplaces.splice(i, 1); save(); render(); },
     formWtOpen: function (i) {
-      state._formWtIdx = i; state._formWtDay = null;
+      state._formWtIdx = i; state._formWtDay = null; state._formWtY = today.getFullYear(); state._formWtM = today.getMonth();
       state._formSchedule = JSON.parse(JSON.stringify(state._formWorkplaces[i].schedule && state._formWorkplaces[i].schedule.mode ? state._formWorkplaces[i].schedule : emptySchedule()));
       var box = el('<div class="modal-overlay" id="formwt-overlay"></div>');
       document.body.appendChild(box);
@@ -2832,13 +3237,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
         h += '<div class="group-label">工作日</div>' + weeklyRow('mon') + weeklyRow('tue') + weeklyRow('wed') + weeklyRow('thu') + weeklyRow('fri');
         h += '<div class="group-label">周末</div>' + weeklyRow('sat') + weeklyRow('sun');
       } else {
-        h += '<div class="filter-title">点日期设置班次</div><div class="cal-grid">';
-        for (var d = 1; d <= 31; d++) {
-          var slots = (s.daySlots || {})[d] || [];
-          h += '<div class="cal-day' + (slots.length ? ' selected' : '') + '" data-d="' + d + '" onclick="APP.formWtDay(' + d + ')"><div class="d">' + d + '</div>' +
-            (slots.length ? slots.map(function (sl) { return '<span class="slot-tag slot-' + sl + '">' + slotShort(sl) + '</span>'; }).join('') : '') + '</div>';
-        }
-        h += '</div>';
+        h += '<div class="filter-title">每月排班（真实日历，可逐日调整）</div>';
+        h += schedMonthNavHTML(state._formWtY, state._formWtM, 'formWtMonthNav');
+        h += schedMonthGridHTML(s, state._formWtY, state._formWtM, 'APP.formWtDay');
         if (state._formWtDay) {
           var cur = (s.daySlots || {})[state._formWtDay] || [];
           h += '<div style="margin-top:8px;font-size:12px;color:var(--text-2);">' + state._formWtDay + '号班次：</div>' +
@@ -2858,10 +3259,22 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (s.mode === m) return;
       s.mode = m;
       if (m === 'weekly') { if (!s.week) s.week = emptyWeekly(); }
-      else { if (!s.daySlots) s.daySlots = {}; }
+      else {
+        if (!s.daySlots) s.daySlots = {};
+        if (!state._formWtY) { var td = new Date(); state._formWtY = td.getFullYear(); state._formWtM = td.getMonth(); }
+        prefillMonthlyFromWeekly(s, state._formWtY, state._formWtM);
+      }
       state._formWtDay = null;
       APP.formWtRender();
     },
+    formWtMonthNav: function (dir) {
+      state._formWtM += dir;
+      if (state._formWtM < 0) { state._formWtM = 11; state._formWtY--; }
+      if (state._formWtM > 11) { state._formWtM = 0; state._formWtY++; }
+      state._formWtDay = null;
+      APP.formWtRender();
+    },
+
     formWtDay: function (d) { state._formWtDay = d; APP.formWtRender(); },
     formWtSlot: function (sl) {
       var s = state._formSchedule;
@@ -2979,7 +3392,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           name: d.name, title: d.title, phone: d.phone,
           province: province, city: city, district: district,
           unit: unit, department: department, address: mainAddr,
-          workplaces: [{ unit: unit, department: department, schedule: d.schedule }],
+          workplaces: [{ unit: unit, department: department, schedule: d.schedule, province: province, city: city, district: district, address: mainAddr, lat: '', lng: '' }],
           locations: selLocs, tags: [],
           schedule: JSON.parse(JSON.stringify(d.schedule)),
           notes: []
@@ -2991,7 +3404,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     // ===== 批量添加：工作时间弹窗 =====
     batchWtOpen: function (i) {
       var b = state._batchAdd;
-      state._batchWtIdx = i; state._batchWtDay = null;
+      state._batchWtIdx = i; state._batchWtDay = null; state._batchWtY = today.getFullYear(); state._batchWtM = today.getMonth();
       state._formSchedule = JSON.parse(JSON.stringify(b.doctors[i].schedule && b.doctors[i].schedule.mode ? b.doctors[i].schedule : emptySchedule()));
       var box = el('<div class="modal-overlay" id="batchwt-overlay"></div>');
       document.body.appendChild(box);
@@ -3012,13 +3425,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
         h += '<div class="group-label">工作日</div>' + weeklyRow('mon') + weeklyRow('tue') + weeklyRow('wed') + weeklyRow('thu') + weeklyRow('fri');
         h += '<div class="group-label">周末</div>' + weeklyRow('sat') + weeklyRow('sun');
       } else {
-        h += '<div class="filter-title">点日期设置班次</div><div class="cal-grid">';
-        for (var d = 1; d <= 31; d++) {
-          var slots = (s.daySlots || {})[d] || [];
-          h += '<div class="cal-day' + (slots.length ? ' selected' : '') + '" data-d="' + d + '" onclick="APP.batchWtDay(' + d + ')"><div class="d">' + d + '</div>' +
-            (slots.length ? slots.map(function (sl) { return '<span class="slot-tag slot-' + sl + '">' + slotShort(sl) + '</span>'; }).join('') : '') + '</div>';
-        }
-        h += '</div>';
+        h += '<div class="filter-title">每月排班（真实日历，可逐日调整）</div>';
+        h += schedMonthNavHTML(state._batchWtY, state._batchWtM, 'batchWtMonthNav');
+        h += schedMonthGridHTML(s, state._batchWtY, state._batchWtM, 'APP.batchWtDay');
         if (state._batchWtDay) {
           var cur = (s.daySlots || {})[state._batchWtDay] || [];
           h += '<div style="margin-top:8px;font-size:12px;color:var(--text-2);">' + state._batchWtDay + '号班次：</div>' +
@@ -3038,10 +3447,22 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (s.mode === m) return;
       s.mode = m;
       if (m === 'weekly') { if (!s.week) s.week = emptyWeekly(); }
-      else { if (!s.daySlots) s.daySlots = {}; }
+      else {
+        if (!s.daySlots) s.daySlots = {};
+        if (!state._batchWtY) { var td = new Date(); state._batchWtY = td.getFullYear(); state._batchWtM = td.getMonth(); }
+        prefillMonthlyFromWeekly(s, state._batchWtY, state._batchWtM);
+      }
       state._batchWtDay = null;
       APP.batchWtRender();
     },
+    batchWtMonthNav: function (dir) {
+      state._batchWtM += dir;
+      if (state._batchWtM < 0) { state._batchWtM = 11; state._batchWtY--; }
+      if (state._batchWtM > 11) { state._batchWtM = 0; state._batchWtY++; }
+      state._batchWtDay = null;
+      APP.batchWtRender();
+    },
+
     batchWtDay: function (d) { state._batchWtDay = d; APP.batchWtRender(); },
     batchWtSlot: function (sl) {
       var s = state._formSchedule;
@@ -3087,21 +3508,29 @@ svg.leaflet-image-layer.leaflet-interactive path {
       var name = document.getElementById('cf-name').value.trim();
       var title = document.getElementById('cf-title').value.trim();
       var phone = document.getElementById('cf-phone').value.trim();
-      var province = document.getElementById('cf-province').value.trim();
-      var city = document.getElementById('cf-city').value.trim();
-      var district = document.getElementById('cf-district').value.trim();
       var workplaces = [];
       for (var wi = 0; wi < state._formWorkplaces.length; wi++) {
         var wu = ((document.getElementById('fw-unit-' + wi) || {}).value || '').trim();
         var wd = ((document.getElementById('fw-dept-' + wi) || {}).value || '').trim();
-        if (wu) workplaces.push({ unit: wu, department: wd, schedule: JSON.parse(JSON.stringify(state._formWorkplaces[wi].schedule)) });
+        var wpv = ((document.getElementById('fw-province-' + wi) || {}).value || '').trim();
+        var wc = ((document.getElementById('fw-city-' + wi) || {}).value || '').trim();
+        var wdi = ((document.getElementById('fw-district-' + wi) || {}).value || '').trim();
+        var wa = ((document.getElementById('fw-addr-' + wi) || {}).value || '').trim();
+        if (wu) {
+          workplaces.push({ unit: wu, department: wd, province: wpv, city: wc, district: wdi, address: wa, lat: state._formWorkplaces[wi].lat || '', lng: state._formWorkplaces[wi].lng || '', schedule: JSON.parse(JSON.stringify(state._formWorkplaces[wi].schedule)) });
+        }
       }
       var unit = workplaces.length ? workplaces[0].unit : '';
       var department = workplaces.length ? workplaces[0].department : '';
-      var address = document.getElementById('cf-address').value.trim();
+      var province = workplaces.length ? workplaces[0].province : '';
+      var city = workplaces.length ? workplaces[0].city : '';
+      var district = workplaces.length ? workplaces[0].district : '';
+      var address = workplaces.length ? workplaces[0].address : '';
+      var lat = workplaces.length ? (workplaces[0].lat || '') : '';
+      var lng = workplaces.length ? (workplaces[0].lng || '') : '';
       var err = document.getElementById('cf-err');
       if (!name) { err.textContent = '请填写姓名'; return; }
-      if (!city || !district) { err.textContent = '请填写城市和地区'; return; }
+      if (!city || !district) { err.textContent = '请至少添加一个工作单位并填写城市和地区'; return; }
       var dupCust = null;
       if (!state.cEditId) {
         dupCust = state.customers.find(function (c) {
@@ -3114,31 +3543,28 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (dupCust) {
         if (!window.confirm('可能重复：已有客户“' + dupCust.name + '”（' + (dupCust.unit || '未填单位') + '）。是否继续保存？')) return;
       }
-      var pickLat = state._formLat || '';
-      var pickLng = state._formLng || '';
       var sched = workplaces.length ? workplaces[0].schedule : null;
       if (state.cEditId) {
         var c = findCustomer(state.cEditId);
-        c.name = name; c.title = title; c.phone = phone; c.province = province; c.city = city;
-        var oldAddrBefore = (c.province || '') + (c.city || '') + (c.district || '') + (c.address || '');
-        c.district = district; c.unit = unit; c.department = department; c.workplaces = workplaces; c.address = address; c.tags = state._formTags.slice();
+        c.name = name; c.title = title; c.phone = phone;
+        c.workplaces = workplaces; c.unit = unit; c.department = department;
+        c.province = province; c.city = city; c.district = district; c.address = address;
+        c.lat = lat; c.lng = lng;
+        c.tags = state._formTags.slice();
         if (sched) c.schedule = sched;
-        if (pickLat && pickLng) { c.lat = pickLat; c.lng = pickLng; }
-        else {
-          var newAddrStr = province + city + district + address;
-          var oldAddrStr = oldAddrBefore;
-          if (newAddrStr !== oldAddrStr) { c.lat = ''; c.lng = ''; }
-        }
         if (_geoFail) delete _geoFail[c.id];
       } else {
         var newCust = { id: Date.now(), name: name, title: title, phone: phone, province: province, city: city,
-          district: district, unit: unit, department: department, address: address, workplaces: workplaces, tags: state._formTags.slice(), schedule: sched || emptySchedule(), notes: [], locations: [], lat: pickLat, lng: pickLng };
+          district: district, unit: unit, department: department, address: address, workplaces: workplaces, tags: state._formTags.slice(), schedule: sched || emptySchedule(), notes: [], locations: [], lat: lat, lng: lng };
         state.customers.push(newCust);
         var noteText = ((document.getElementById('cf-note') || {}).value || '').trim();
         if (noteText) newCust.notes = [{ id: Date.now(), text: noteText, image: null, date: dstr(0) }];
       }
-      state.cEditId = null; state._formTags = []; state._formSchedule = null; state._formDraft = null; state._formLat = ''; state._formLng = ''; state._pickAddr = ''; state._pickResult = null; state.cScreen = 'list'; save(); render();
+      state.cEditId = null; state._formTags = []; state._formSchedule = null; state._formDraft = null;
+      state._formLat = ''; state._formLng = ''; state._pickAddr = ''; state._pickResult = null; state._formAddrIdx = null;
+      state.cScreen = 'list'; save(); render();
     },
+
     confirmDeleteCustomer: function (id) {
       var c = findCustomer(id);
       if (window.confirm('确定删除客户「' + c.name + '」吗？其拜访计划也会一并删除。')) {
@@ -3183,6 +3609,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       var c = findCustomer(id);
       state.cSelId = id;
       state._schedFrom = 'detail';
+      state._schedViewY = today.getFullYear(); state._schedViewM = today.getMonth();
       state._formSchedule = JSON.parse(JSON.stringify(c.schedule && c.schedule.mode ? c.schedule : emptySchedule()));
       state.cScreen = 'schedule'; save(); render();
     },
@@ -3210,9 +3637,20 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (s.mode === m) return;
       s.mode = m;
       if (m === 'weekly') { if (!s.week) s.week = emptyWeekly(); }
-      else { if (!s.daySlots) s.daySlots = {}; }
+      else {
+        if (!s.daySlots) s.daySlots = {};
+        if (!state._schedViewY) { var td = new Date(); state._schedViewY = td.getFullYear(); state._schedViewM = td.getMonth(); }
+        prefillMonthlyFromWeekly(s, state._schedViewY, state._schedViewM);
+      }
       save(); render();
     },
+    schedMonthNav: function (dir) {
+      state._schedViewM += dir;
+      if (state._schedViewM < 0) { state._schedViewM = 11; state._schedViewY--; }
+      if (state._schedViewM > 11) { state._schedViewM = 0; state._schedViewY++; }
+      save(); render();
+    },
+
     schedEditDay: function (d) {
       var s = state._formSchedule;
       if (!s.daySlots) s.daySlots = {};
@@ -3434,39 +3872,24 @@ svg.leaflet-image-layer.leaflet-interactive path {
     // ===== 客户管理：拜访计划 =====
     addVisit: function (id) {
       var c = findCustomer(id);
+      if (!c) return;
       state._visitCustomer = id; state._visitSlots = ['am']; state._visitEditId = null;
-      var box = el('<div class="modal-overlay" id="visit-overlay"><div class="modal-box">' +
-        '<div class="modal-title">添加拜访 · ' + c.name + '</div>' +
-        '<div class="field"><label>拜访日期</label><input class="input" id="v-date" type="date" value="' + dstr(1) + '"></div>' +
-        '<div class="field"><label>当日班次（可多选）</label><div class="chips" style="justify-content:center;">' +
-          '<span class="chip on" id="v-am" onclick="APP.toggleVisitSlot(this,\'am\')">上午</span>' +
-          '<span class="chip" id="v-pm" onclick="APP.toggleVisitSlot(this,\'pm\')">下午</span>' +
-          '<span class="chip" id="v-night" onclick="APP.toggleVisitSlot(this,\'night\')">晚上</span>' +
-        '</div></div>' +
-        '<div class="modal-actions"><button class="btn-primary" onclick="APP.saveVisit()">确定</button>' +
-        '<button class="btn-outline" onclick="APP.closeModal(\'visit-overlay\')">取消</button></div></div></div>');
-      document.body.appendChild(box);
+      var td = new Date();
+      state._visitCalY = td.getFullYear(); state._visitCalM = td.getMonth();
+      state._visitDate = nextDutyDate(c) || dstr(1);
+      document.body.appendChild(el(visitModalHTML('添加拜访', c, '', false)));
     },
     editVisit: function (id) {
       var v = findVisit(id);
       if (!v) return;
       var c = findCustomer(v.customerId);
       state._visitEditId = id; state._visitCustomer = v.customerId; state._visitSlots = (v.slots || []).slice();
+      var vd = new Date(v.date + 'T00:00:00');
+      state._visitCalY = vd.getFullYear(); state._visitCalM = vd.getMonth(); state._visitDate = v.date;
       var opts = state.customers.map(function (cc) {
         return '<option value="' + cc.id + '"' + (String(cc.id) === String(v.customerId) ? ' selected' : '') + '>' + cc.name + '</option>';
       }).join('');
-      var box = el('<div class="modal-overlay" id="visit-overlay"><div class="modal-box">' +
-        '<div class="modal-title">编辑拜访 · ' + (c ? c.name : '') + '</div>' +
-        '<div class="field"><label>客户</label><select class="input" id="v-cust">' + opts + '</select></div>' +
-        '<div class="field"><label>拜访日期</label><input class="input" id="v-date" type="date" value="' + v.date + '"></div>' +
-        '<div class="field"><label>当日班次（可多选）</label><div class="chips" style="justify-content:center;">' +
-          '<span class="chip' + ((v.slots || []).indexOf('am') >= 0 ? ' on' : '') + '" id="v-am" onclick="APP.toggleVisitSlot(this,\'am\')">上午</span>' +
-          '<span class="chip' + ((v.slots || []).indexOf('pm') >= 0 ? ' on' : '') + '" id="v-pm" onclick="APP.toggleVisitSlot(this,\'pm\')">下午</span>' +
-          '<span class="chip' + ((v.slots || []).indexOf('night') >= 0 ? ' on' : '') + '" id="v-night" onclick="APP.toggleVisitSlot(this,\'night\')">晚上</span>' +
-        '</div></div>' +
-        '<div class="modal-actions"><button class="btn-primary" onclick="APP.saveVisitEdit()">确定</button>' +
-        '<button class="btn-outline" onclick="APP.closeModal(\'visit-overlay\')">取消</button></div></div></div>');
-      document.body.appendChild(box);
+      document.body.appendChild(el(visitModalHTML('编辑拜访', c, opts, true)));
     },
     toggleVisitSlot: function (el2, s) {
       var arr = state._visitSlots || (state._visitSlots = []);
@@ -3474,24 +3897,43 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (i >= 0) { arr.splice(i, 1); el2.classList.remove('on'); }
       else { arr.push(s); el2.classList.add('on'); }
     },
+    visitCalNav: function (dir) {
+      state._visitCalM += dir;
+      if (state._visitCalM < 0) { state._visitCalM = 11; state._visitCalY--; }
+      if (state._visitCalM > 11) { state._visitCalM = 0; state._visitCalY++; }
+      var c = findCustomer(state._visitCustomer);
+      var cal = document.getElementById('v-cal');
+      var title = document.getElementById('v-cal-title');
+      if (cal) cal.innerHTML = visitCalHTML(c, state._visitCalY, state._visitCalM, state._visitDate);
+      if (title) title.textContent = state._visitCalY + '年' + (state._visitCalM + 1) + '月';
+    },
+    visitCalPick: function (ds) {
+      state._visitDate = ds;
+      var c = findCustomer(state._visitCustomer);
+      var cal = document.getElementById('v-cal');
+      var txt = document.getElementById('v-date-text');
+      if (cal) cal.innerHTML = visitCalHTML(c, state._visitCalY, state._visitCalM, state._visitDate);
+      if (txt) txt.textContent = ds;
+    },
     saveVisit: function () {
-      var d = document.getElementById('v-date').value;
-      if (!d) { alert('请选择日期'); return; }
+      if (!state._visitDate) { alert('请选择日期'); return; }
       if (!state._visitSlots || !state._visitSlots.length) { alert('请至少选择一个班次'); return; }
-      state.visits.push({ id: Date.now(), customerId: state._visitCustomer, date: d, slots: state._visitSlots.slice(), done: false });
+      state.visits.push({ id: Date.now(), customerId: state._visitCustomer, date: state._visitDate, slots: state._visitSlots.slice(), done: false });
       state._visitCustomer = null; state._visitSlots = null; state._visitEditId = null;
       this.closeModal('visit-overlay'); save(); render();
     },
     saveVisitEdit: function () {
       var v = findVisit(state._visitEditId);
       if (!v) { this.closeModal('visit-overlay'); return; }
+      if (!state._visitDate) { alert('请选择日期'); return; }
       if (!state._visitSlots || !state._visitSlots.length) { alert('请至少选择一个班次'); return; }
       v.customerId = document.getElementById('v-cust').value;
-      v.date = document.getElementById('v-date').value;
+      v.date = state._visitDate;
       v.slots = state._visitSlots.slice();
       state._visitCustomer = null; state._visitSlots = null; state._visitEditId = null;
       this.closeModal('visit-overlay'); save(); render();
     },
+
     toggleVisitDone: function (id) {
       var v = findVisit(id);
       if (v) { v.done = !v.done; save(); render(); }
@@ -3651,7 +4093,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 })();
 </script>
 <script>
-  window.onerror = function () {
+  window.onerror = function (msg) {
+    if (msg && String(msg).indexOf('_leaflet_pos') >= 0) return false;
     var el = document.getElementById('fatal-error');
     if (!el) {
       var d = document.createElement('div');
