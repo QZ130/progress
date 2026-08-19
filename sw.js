@@ -1,4 +1,4 @@
-const CACHE = 'progress-v4';
+﻿const CACHE = 'progress-v5';
 const ASSETS = ['./', './index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(ASSETS); }).then(function () { return self.skipWaiting(); }));
@@ -17,3 +17,4 @@ self.addEventListener('fetch', function (e) {
     return caches.match(e.request).then(function (r) { return r || caches.match('./index.html'); });
   }));
 });
+

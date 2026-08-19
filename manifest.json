@@ -1,13 +1,13 @@
-{
+﻿{
   "name": "progress",
   "short_name": "progress",
-  "description": "个人工作台：日历、目标计划、客户管理、拜访计划",
+  "description": "涓汉宸ヤ綔鍙帮細鏃ュ巻銆佺洰鏍囪鍒掋€佸鎴风鐞嗐€佹嫓璁胯鍒?,
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#F7F7F5",
+  "theme_color": "#F7F7F5",
   "icons": [
     {
       "src": "icons/icon-192.png",
